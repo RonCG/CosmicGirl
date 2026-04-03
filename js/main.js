@@ -72,14 +72,18 @@ const GisGame = {
     this.ambientAudio.loop = true;
     this.ambientAudio.volume = 0;
 
-    // Start audio on first user interaction (browsers require a gesture)
-    const startAudioOnce = () => {
+    // Try to autoplay; if browser blocks it, start on first interaction
+    this.ambientAudio.play().then(() => {
       this.startAudio();
-      document.removeEventListener('click', startAudioOnce);
-      document.removeEventListener('touchstart', startAudioOnce);
-    };
-    document.addEventListener('click', startAudioOnce);
-    document.addEventListener('touchstart', startAudioOnce);
+    }).catch(() => {
+      const startAudioOnce = () => {
+        this.startAudio();
+        document.removeEventListener('click', startAudioOnce);
+        document.removeEventListener('touchstart', startAudioOnce);
+      };
+      document.addEventListener('click', startAudioOnce);
+      document.addEventListener('touchstart', startAudioOnce);
+    });
 
     // Show title
     Decorations.showTitle();
@@ -166,7 +170,7 @@ const GisGame = {
     Sky.generate(finalLevel.date);
 
     UI.showScreen('finale');
-    this._finaleStep(0);
+    this._finaleStep(1);
   },
 
   _finaleStep(step) {
@@ -184,45 +188,6 @@ const GisGame = {
     content.insertBefore(div, msg);
 
     switch (step) {
-      // Step 0: "Did you enjoy the game?"
-      case 0: {
-        div.innerHTML = `
-          <p class="finale-step-text">¿Te gustó el juego?</p>
-          <div class="finale-buttons">
-            <button class="cosmic-btn" id="finYes">¡Sí!</button>
-            <button class="no-btn" id="finNo">No</button>
-          </div>
-        `;
-        const yesBtn = div.querySelector('#finYes');
-        const noBtn = div.querySelector('#finNo');
-        let noAttempts = 0;
-
-        yesBtn.addEventListener('click', () => this._finaleStep(1));
-
-        // No button: escapes on mouse, funny message on touch
-        const escapeNo = () => {
-          noAttempts++;
-          if (noAttempts >= 3) {
-            noBtn.textContent = '¡Selecciona Sí!';
-            noBtn.style.pointerEvents = 'none';
-            noBtn.style.opacity = '0.2';
-            return;
-          }
-          noBtn.classList.add('escaping');
-          const maxX = window.innerWidth - 120;
-          const maxY = window.innerHeight - 60;
-          noBtn.style.left = (Math.random() * maxX) + 'px';
-          noBtn.style.top = (Math.random() * maxY) + 'px';
-        };
-
-        noBtn.addEventListener('mouseenter', escapeNo);
-        noBtn.addEventListener('touchstart', (e) => {
-          e.preventDefault();
-          escapeNo();
-        });
-        break;
-      }
-
       // Step 1: "Thanks for playing"
       case 1: {
         div.innerHTML = `
@@ -516,8 +481,17 @@ const GisGame = {
     setTimeout(() => this._spawnFirework(), 300);
   },
 
+  _playFireworkSound() {
+    try {
+      const sound = new Audio('audio/firework.mp3');
+      sound.volume = 0.5 + Math.random() * 0.3;
+      sound.play();
+    } catch (e) { /* ignore audio errors */ }
+  },
+
   _spawnFirework() {
     if (!this.finaleFireworks) return;
+    this._playFireworkSound();
     const w = this.canvas.width;
     const h = this.canvas.height;
 
