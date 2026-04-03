@@ -305,7 +305,7 @@ const GisGame = {
       // Step 8: Screenplay scene
       case 8: {
         const lines = [
-          { type: 'heading', text: 'DORMITORIO DE RON - MEDIODÍA' },
+          { type: 'heading', text: 'DORMITORIO DE RON - TARDE' },
           { type: 'action', text: 'Los dos están acostados en la cama. Se sientan derechos.' },
           { type: 'action', text: 'La luz del sol entra por la ventana. Ron se levanta.' },
           { type: 'character', text: 'RON' },
