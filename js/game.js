@@ -17,10 +17,17 @@ const Game = {
 
   audioCtx: null,
 
+  // Moon easter egg
+  _moonHoldTimer: null,
+  _moonHolding: false,
+  moonWobble: 0,
+  moonFlash: 0,
+
   init(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this._setupInput();
+    this._setupMoonEasterEgg();
   },
 
   _getAudioCtx() {
@@ -176,6 +183,68 @@ const Game = {
     });
   },
 
+  _setupMoonEasterEgg() {
+    const getMoonPos = () => {
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+      return {
+        x: w * 0.85,
+        y: h * 0.15,
+        r: Math.min(w, h) * 0.04,
+      };
+    };
+
+    const isOnMoon = (clientX, clientY) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const cx = (clientX - rect.left) * scaleX;
+      const cy = (clientY - rect.top) * scaleY;
+      const moon = getMoonPos();
+      const dx = cx - moon.x;
+      const dy = cy - moon.y;
+      return Math.sqrt(dx * dx + dy * dy) < moon.r * 2.5;
+    };
+
+    const startHold = () => {
+      if (!this.isPlaying) return;
+      this._moonHolding = true;
+      this._moonHoldStart = performance.now();
+      this._moonHoldTimer = setTimeout(() => {
+        if (!this._moonHolding || !this.isPlaying) return;
+        // Easter egg triggered — instant win
+        this.playSnitchSound();
+        this.moonFlash = 1.0;
+        this.caught = this.goal;
+        this.isPlaying = false;
+        for (const cb of this.completeCallbacks) cb();
+        this._moonHolding = false;
+      }, 5000);
+    };
+
+    const cancelHold = () => {
+      this._moonHolding = false;
+      this._moonHoldStart = null;
+      if (this._moonHoldTimer) {
+        clearTimeout(this._moonHoldTimer);
+        this._moonHoldTimer = null;
+      }
+    };
+
+    this.canvas.addEventListener('mousedown', (e) => {
+      if (isOnMoon(e.clientX, e.clientY)) startHold();
+    });
+    this.canvas.addEventListener('mouseup', cancelHold);
+    this.canvas.addEventListener('mouseleave', cancelHold);
+
+    this.canvas.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      if (touch && isOnMoon(touch.clientX, touch.clientY)) startHold();
+    }, { passive: true });
+    this.canvas.addEventListener('touchend', cancelHold);
+    this.canvas.addEventListener('touchcancel', cancelHold);
+  },
+
   _spawnShootingStar(time) {
     if (!this.level) return;
 
@@ -248,6 +317,14 @@ const Game = {
       this.isPlaying = false;
       for (const cb of this.failCallbacks) cb();
       return;
+    }
+
+    // Moon wobble when holding
+    if (this._moonHolding && this._moonHoldStart) {
+      const holdTime = (performance.now() - this._moonHoldStart) / 1000;
+      this.moonWobble = Math.sin(holdTime * 8) * (holdTime / 5) * 6;
+    } else {
+      this.moonWobble *= 0.9; // ease back
     }
 
     this._spawnShootingStar(time);

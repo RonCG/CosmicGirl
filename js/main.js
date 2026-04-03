@@ -24,18 +24,11 @@ const GisGame = {
     window.addEventListener('resize', () => this.resize());
 
     // Bind events
-    // Difficulty selector
-    const easyBtn = document.getElementById('startEasy');
-    const hardBtn = document.getElementById('startHard');
-    easyBtn.addEventListener('click', () => {
-      this.difficulty = 'easy';
-      easyBtn.classList.add('active');
-      hardBtn.classList.remove('active');
-    });
-    hardBtn.addEventListener('click', () => {
-      this.difficulty = 'hard';
-      hardBtn.classList.add('active');
-      easyBtn.classList.remove('active');
+    // Difficulty toggle
+    const diffBtn = document.getElementById('difficultyBtn');
+    diffBtn.addEventListener('click', () => {
+      this.difficulty = this.difficulty === 'easy' ? 'hard' : 'easy';
+      diffBtn.textContent = this.difficulty === 'easy' ? 'Fácil' : 'Difícil';
     });
 
     document.getElementById('startBtn').addEventListener('click', () => this.onStart());
@@ -218,7 +211,7 @@ const GisGame = {
       // Step 1: "Thanks for playing"
       case 1: {
         div.innerHTML = `
-          <p class="finale-step-text">Gracias por jugar este juego<br>hecho con mucho cariño por Ron.</p>
+          <p class="finale-step-text">Gracias por jugar este juego<br>hecho con mucho cariño por mi (y la IA).</p>
           <p class="finale-step-subtext">~ Fin ~</p>
           <button class="cosmic-btn" id="finNext1">...</button>
         `;
@@ -318,7 +311,7 @@ const GisGame = {
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(cierra las cortinas)' },
           { type: 'action', text: 'La habitación se oscurece un poco, pero la luz del mediodía aún se cuela por los bordes. Todavía se nota que es de día.' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'dialogue', text: '¿Qué haces?' },
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(con falsa casualidad)' },
@@ -327,23 +320,23 @@ const GisGame = {
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(se rie nerviosamente)' },
           { type: 'dialogue', text: 'No, no, ese no.' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'parenthetical', text: '(riéndose)' },
           { type: 'dialogue', text: 'Justo lo que necesitaba saber...' },
           { type: 'character', text: 'RON' },
-          { type: 'dialogue', text: 'Son cosas importantes que hay que conocer ah, cultura genral... Pero no es lo que quería ponerte.' },
+          { type: 'dialogue', text: 'Son cosas importantes que hay que conocer ah, cultura general... Pero no es lo que quería ponerte.' },
           { type: 'action', text: 'Ron cambia el video. Aparece un cielo estrellado que se mueve lentamente. Música suave.' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'parenthetical', text: '(mirando la TV)' },
           { type: 'dialogue', text: 'Qué bonito... estrellas a mediodía en la TV.' },
           { type: 'character', text: 'RON' },
           { type: 'dialogue', text: '¿Sabías que desde Quito puedes ver casi todas las constelaciones del mundo?' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'dialogue', text: 'Eso no lo sabía.' },
           { type: 'character', text: 'RON' },
           { type: 'dialogue', text: 'Es por la latitud. Estamos justo en la mitad, entonces podemos ver las del norte y las del sur.' },
           { type: 'action', text: 'Pausa. Los dos miran la TV en silencio por un momento.' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'parenthetical', text: '(sonriendo)' },
           { type: 'dialogue', text: 'O sea que tenemos un cielo cósmico.' },
           { type: 'action', text: 'Los dos exhalan una risa por la nariz. De esas que no son risa pero casi.' },
@@ -351,19 +344,19 @@ const GisGame = {
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(de repente serio)' },
           { type: 'dialogue', text: 'Pues si. Oye...' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'dialogue', text: '¿Qué?' },
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(mirándola, ya no la TV)' },
           { type: 'dialogue', text: 'Hay algo más que quería decirte... Oh bueno, en realidad preguntarte' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'parenthetical', text: '(un poco nerviosa, lo mira)' },
           { type: 'dialogue', text: 'Creo que sé lo que me vas a preguntar...' },
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(un poco nervioso también, se sienta junto a ella y la mira a los ojos)' },
           { type: 'dialogue', text: 'Creo que sé lo que crees saber...' },
           { type: 'action', text: 'Silencio. Las estrellas del video siguen brillando. Él toma aire.' },
-          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'character', text: 'GISELLE' },
           { type: 'parenthetical', text: '(sonriendo)' },
           { type: 'dialogue', text: 'Entonces pregunta.' },
           { type: 'character', text: 'RON' },
@@ -401,7 +394,7 @@ const GisGame = {
       // Step 9: The real question — Yes / escaping No
       case 9: {
         div.innerHTML = `
-          <p class="finale-question">Cosmic Girl,<br>¿quieres ser mi novia?</p>
+          <p class="finale-question">GISELLE,<br>¿quieres ser mi novia?</p>
           <div class="finale-buttons">
             <button class="cosmic-btn finale-yes-btn" id="finYesFinal">¡Sí!</button>
             <button class="no-btn" id="finNoFinal">No</button>
@@ -436,11 +429,13 @@ const GisGame = {
         break;
       }
 
-      // Step 10: Heart animation + fireworks
+      // Step 10: Heart animation + fireworks + couple together
       case 10: {
         div.remove();
         msg.textContent = '';
         msg.classList.remove('visible');
+
+        Decorations.showFinale();
 
         this.finaleStartTime = performance.now();
         this.finaleStars = this._createFinaleStars();
@@ -496,9 +491,11 @@ const GisGame = {
   },
 
   _startFireworks() {
+    this._startFireworkAmbient();
     this._fireworkInterval = setInterval(() => {
       if (this.finalePhase !== 'reveal') {
         clearInterval(this._fireworkInterval);
+        this._stopFireworkAmbient();
         return;
       }
       this._spawnFirework();
@@ -508,17 +505,25 @@ const GisGame = {
     setTimeout(() => this._spawnFirework(), 300);
   },
 
-  _playFireworkSound() {
+  _startFireworkAmbient() {
     try {
-      const sound = new Audio('audio/firework.mp3');
-      sound.volume = 0.5 + Math.random() * 0.3;
-      sound.play();
+      this._fireworkAmbient = new Audio('audio/firework_ambient.mp3');
+      this._fireworkAmbient.loop = true;
+      this._fireworkAmbient.volume = 0.6;
+      this._fireworkAmbient.play();
     } catch (e) { /* ignore audio errors */ }
+  },
+
+  _stopFireworkAmbient() {
+    if (this._fireworkAmbient) {
+      this._fireworkAmbient.pause();
+      this._fireworkAmbient.currentTime = 0;
+      this._fireworkAmbient = null;
+    }
   },
 
   _spawnFirework() {
     if (!this.finaleFireworks) return;
-    this._playFireworkSound();
     const w = this.canvas.width;
     const h = this.canvas.height;
 
@@ -652,16 +657,19 @@ const GisGame = {
     // Render sky
     Sky.render(time);
 
-    // Render level decorations (during intro and gameplay, not finale)
-    if (!this.finalePhase) {
-      Decorations.render(time);
-    }
+    // Render level decorations
+    Decorations.render(time);
 
     // Render game elements
     if (Game.isPlaying) {
       Game.update(time, safeDt);
       Game.render();
       UI.updateTimer(Game.timeRemaining);
+    }
+
+    // Moon flash decay (runs even after level ends)
+    if (Game.moonFlash > 0) {
+      Game.moonFlash = Math.max(0, Game.moonFlash - safeDt * 0.8);
     }
 
     // Render finale stars

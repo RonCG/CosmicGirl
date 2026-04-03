@@ -16,12 +16,11 @@
     <div class="title-content">
       <h1 class="game-title">Cosmic Girl</h1>
       <p class="subtitle">Un viaje por las estrellas</p>
-      <div class="difficulty-select">
-        <button id="startEasy" class="cosmic-btn difficulty-btn active">Fácil</button>
-        <button id="startHard" class="cosmic-btn difficulty-btn">Difícil</button>
-      </div>
       <button id="startBtn" class="cosmic-btn">Comenzar</button>
-      <button id="infoBtn" class="info-btn">?</button>
+      <div class="bottom-buttons">
+        <button id="difficultyBtn" class="small-btn">Fácil</button>
+        <button id="infoBtn" class="small-btn info">?</button>
+      </div>
     </div>
   </div>
 
@@ -32,7 +31,7 @@
 
       <div class="info-section">
         <h3 class="info-heading">El juego</h3>
-        <p class="info-text">Cada nivel representa una fecha especial en nuestra historia. El cielo que ves es el cielo real sobre Quito en esa noche, con las estrellas y constelaciones reales.</p>
+        <p class="info-text">Cada nivel representa una fecha especial en nuestra cosmic aventura. El cielo que ves es el cielo real sobre Quito en esa noche, con las estrellas y constelaciones reales.</p>
       </div>
 
       <div class="info-section">
@@ -47,7 +46,7 @@
 
       <div class="info-section">
         <h3 class="info-heading">Cosas que ver</h3>
-        <p class="info-text">En la parte inferior de la pantalla hay pixel art diferente en cada nivel. Presta atención, cada uno tiene una historia especial.</p>
+        <p class="info-text">En la parte inferior de la pantalla hay pixel arts diferentes en cada nivel. Presta atención, cada uno tiene es un detalle especial.</p>
       </div>
 
       <div class="info-section">
@@ -74,6 +73,7 @@
         <span id="hudCaught">0</span> / <span id="hudGoal">0</span> ⭐
       </div>
     </div>
+    <div class="hud-date" id="hudDate"></div>
   </div>
 
   <div id="levelComplete" class="screen hidden">

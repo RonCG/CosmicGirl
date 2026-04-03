@@ -131,7 +131,7 @@ const Sky = {
   },
 
   magToBrightness(mag) {
-    return Math.max(0.12, 1.0 - (mag + 1.5) * 0.13);
+    return Math.max(0.55, 1.0 - (mag + 1.5) * 0.06);
   },
 
   // --- Night sky gradient ---
@@ -150,13 +150,29 @@ const Sky = {
     ctx.fillRect(0, 0, w, h);
   },
 
-  // --- Moon ---
+  // --- Moon (pixel art full moon) ---
+  _moonSprite: [
+    '....LLLL....',
+    '..LLLLLLLL..',
+    '.LLLDLLLLDL.',
+    'LLLLLLLLLLLL',
+    'LLLDLLLLLLLL',
+    'LLLLLLLLDLLL',
+    'LLLLLLLLLLLL',
+    'LLLLLDLLLLLL',
+    'LLLLLLLLLLDL',
+    '.LLLLLLLLLL.',
+    '..LLLLLLLL..',
+    '....LLLL....',
+  ],
+
   drawMoon(time) {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    const moonX = w * 0.85;
+    const wobble = (typeof Game !== 'undefined' && Game.moonWobble) || 0;
+    const moonX = w * 0.85 + wobble;
     const moonY = h * 0.15;
     const moonR = Math.min(w, h) * 0.04;
 
@@ -177,26 +193,38 @@ const Sky = {
     ctx.arc(moonX, moonY, moonR * 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Moon disc
-    ctx.fillStyle = '#E8E4D8';
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-    ctx.fill();
+    // Pixel art full moon
+    const sprite = this._moonSprite;
+    const cols = sprite[0].length;
+    const rows = sprite.length;
+    const ps = (moonR * 2) / cols;
+    const startX = moonX - moonR;
+    const startY = moonY - (rows * ps) / 2;
 
-    // Crescent shadow (make it a waxing crescent)
-    ctx.fillStyle = '#0d0d24';
-    ctx.beginPath();
-    ctx.arc(moonX + moonR * 0.5, moonY, moonR * 0.85, 0, Math.PI * 2);
-    ctx.fill();
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const ch = sprite[r][c];
+        if (ch === '.') continue;
+        if (ch === 'L') {
+          ctx.fillStyle = '#E8E4D8';
+        } else { // D = darker crater
+          ctx.fillStyle = '#C8C4B8';
+        }
+        ctx.fillRect(startX + c * ps, startY + r * ps, Math.ceil(ps), Math.ceil(ps));
+      }
+    }
 
-    // Subtle crater details on the lit part
-    ctx.fillStyle = 'rgba(180, 175, 160, 0.3)';
-    ctx.beginPath();
-    ctx.arc(moonX - moonR * 0.35, moonY - moonR * 0.2, moonR * 0.12, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(moonX - moonR * 0.2, moonY + moonR * 0.35, moonR * 0.08, 0, Math.PI * 2);
-    ctx.fill();
+    // Moon flash (Easter egg burst)
+    const flash = (typeof Game !== 'undefined' && Game.moonFlash) || 0;
+    if (flash > 0) {
+      const burstGlow = ctx.createRadialGradient(moonX, moonY, moonR * 0.5, moonX, moonY, moonR * 12);
+      burstGlow.addColorStop(0, `rgba(255, 255, 220, ${flash * 0.9})`);
+      burstGlow.addColorStop(0.3, `rgba(255, 240, 180, ${flash * 0.5})`);
+      burstGlow.addColorStop(0.6, `rgba(255, 220, 130, ${flash * 0.2})`);
+      burstGlow.addColorStop(1, `rgba(255, 200, 100, 0)`);
+      ctx.fillStyle = burstGlow;
+      ctx.fillRect(moonX - moonR * 12, moonY - moonR * 12, moonR * 24, moonR * 24);
+    }
   },
 
   // --- Ambient shooting stars, comets, meteorites ---

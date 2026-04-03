@@ -30,9 +30,18 @@ const Decorations = {
     this.resize();
   },
 
+  showFinale() {
+    this.currentLevel = -3; // finale mode — couple together
+    this.resize();
+  },
+
   render(time) {
     if (this.currentLevel === -2) {
       this._renderTitle(time);
+      return;
+    }
+    if (this.currentLevel === -3) {
+      this._renderTogether(time);
       return;
     }
     if (this.currentLevel < 0 || this.currentLevel > 9) return;
@@ -343,6 +352,23 @@ const Decorations = {
   },
 
   // --- Level 5: McDonald's cosmic (first kiss) ---
+  _mcSprite: [
+    '.....G......G.....',
+    '....GGG....GGG....',
+    '...GG.GG..GG.GG...',
+    '..GGG.GG..GG.GGG..',
+    '..GG...GGGG....G..',
+    '..GG...GGGG....G..',
+    '..G.....GG.....G..',
+    '.GG.....GG.....GG.',
+    '.GG.....GG.....GG.',
+    '.GG.....GG.....GG.',
+    '.GG.....GG.....GG.',
+    '.GG.....GG.....GG.',
+    '.GG............GG.',
+    '..G............G..',
+  ],
+
   _renderCosmic(time) {
     const ctx = this.ctx;
     const w = this.canvas.width;
@@ -350,45 +376,35 @@ const Decorations = {
     const ps = this.ps;
     const t = time * 0.001;
 
-    const cx = w * 0.5;
-    const baseY = h - ps * 8;
+    const sprite = this._mcSprite;
+    const cols = sprite.reduce((max, row) => Math.max(max, row.length), 0);
+    const rows = sprite.length;
+    const scale = ps * 1.8;
+    const spriteW = cols * scale;
+    const spriteH = rows * scale;
+    const startX = w * 0.5 - spriteW / 2;
+    const startY = h - ps * 6 - spriteH;
 
-    // Golden arches (M shape)
-    const archColor = '#FFD700';
-    const archW = ps * 3;
-    ctx.fillStyle = archColor;
+    const palette = {
+      'G': '#F5C242',
+      'B': '#1A1A1A',
+    };
 
-    // Left leg (full height)
-    ctx.fillRect(cx - ps * 12, baseY - ps * 15, archW, ps * 23);
-    // Left arch curve
-    ctx.fillRect(cx - ps * 9, baseY - ps * 17, archW, archW);
-    ctx.fillRect(cx - ps * 6, baseY - ps * 18, archW, archW);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < sprite[r].length; c++) {
+        const ch = sprite[r][c];
+        if (ch === '.' || ch === ' ') continue;
+        ctx.fillStyle = palette[ch] || '#FFD700';
+        ctx.fillRect(startX + c * scale, startY + r * scale, Math.ceil(scale), Math.ceil(scale));
+      }
+    }
 
-    // Left diagonal down to center
-    ctx.fillRect(cx - ps * 3, baseY - ps * 16, archW, archW);
-    ctx.fillRect(cx - ps * 1, baseY - ps * 13, archW, archW);
-
-    // Center V point (extended down)
-    ctx.fillRect(cx + ps * 0.5, baseY - ps * 10, ps * 2, archW);
-    ctx.fillRect(cx - ps * 0.5, baseY - ps * 8, ps * 3, archW);
-
-    // Right diagonal up from center
-    ctx.fillRect(cx + ps * 1, baseY - ps * 13, archW, archW);
-    ctx.fillRect(cx + ps * 3, baseY - ps * 16, archW, archW);
-
-    // Right arch curve
-    ctx.fillRect(cx + ps * 6, baseY - ps * 18, archW, archW);
-    ctx.fillRect(cx + ps * 9, baseY - ps * 17, archW, archW);
-
-    // Right leg (full height)
-    ctx.fillRect(cx + ps * 9, baseY - ps * 15, archW, ps * 23);
-
-    // Extra sparkles radiating outward — the magic
+    // Extra sparkles radiating outward
     for (let i = 0; i < 20; i++) {
       const angle = (i / 20) * Math.PI * 2 + t * 0.3;
       const dist = ps * 15 + Math.sin(t * 2 + i) * ps * 5;
-      const sx = cx + Math.cos(angle) * dist;
-      const sy = baseY - ps * 10 + Math.sin(angle) * dist * 0.6;
+      const sx = w * 0.5 + Math.cos(angle) * dist;
+      const sy = startY + spriteH * 0.4 + Math.sin(angle) * dist * 0.6;
       const sparkleSize = ps * (0.8 + Math.sin(t * 3 + i * 0.7) * 0.4);
       const alpha = 0.4 + Math.sin(t * 2.5 + i) * 0.3;
       ctx.fillStyle = `rgba(255, 230, 150, ${alpha})`;
@@ -397,8 +413,8 @@ const Decorations = {
 
     // Pixel hearts floating up
     for (let i = 0; i < 3; i++) {
-      const hx = cx - ps * 5 + i * ps * 5;
-      const hy = baseY - ps * 20 - ((t * 12 + i * 25) % (ps * 20));
+      const hx = w * 0.5 - ps * 5 + i * ps * 5;
+      const hy = startY - ps * 4 - ((t * 12 + i * 25) % (ps * 20));
       const alpha = 1 - ((t * 12 + i * 25) % (ps * 20)) / (ps * 20);
       this._drawPixelHeart(hx, hy, ps * 0.5, `rgba(255,100,150,${alpha * 0.6})`);
     }
@@ -423,27 +439,34 @@ const Decorations = {
       ctx.fillRect(w * 0.05 + i * w * 0.1, baseY + ps * 3.5, w * 0.05, ps);
     }
 
-    // White car
+    // White hatchback car
     const carX = cx - ps * 12;
     const carY = baseY - ps * 10;
     // Body
     ctx.fillStyle = '#F0F0F0';
-    ctx.fillRect(carX, carY + ps * 3, ps * 24, ps * 6);
-    // Roof
+    ctx.fillRect(carX, carY + ps * 3, ps * 22, ps * 6);
+    // Roof (flat front, slopes down at rear)
     ctx.fillStyle = '#E8E8E8';
-    ctx.fillRect(carX + ps * 5, carY, ps * 14, ps * 4);
-    // Windows
+    ctx.fillRect(carX + ps * 2, carY, ps * 12, ps * 4);
+    // Rear slope
+    ctx.fillRect(carX + ps * 14, carY + ps, ps * 2, ps * 3);
+    ctx.fillRect(carX + ps * 16, carY + ps * 2, ps * 2, ps * 2);
+    // Windshield
     ctx.fillStyle = '#6BA3D6';
-    ctx.fillRect(carX + ps * 6, carY + ps, ps * 5, ps * 2);
-    ctx.fillRect(carX + ps * 13, carY + ps, ps * 5, ps * 2);
+    ctx.fillRect(carX + ps * 3, carY + ps, ps * 5, ps * 2);
+    // Rear window (sloped)
+    ctx.fillRect(carX + ps * 10, carY + ps, ps * 4, ps * 2);
+    // Rear hatch flat
+    ctx.fillStyle = '#DDD';
+    ctx.fillRect(carX + ps * 19, carY + ps * 3, ps * 3, ps * 6);
     // Wheels
     ctx.fillStyle = '#222';
     ctx.fillRect(carX + ps * 3, carY + ps * 8, ps * 4, ps * 4);
-    ctx.fillRect(carX + ps * 17, carY + ps * 8, ps * 4, ps * 4);
+    ctx.fillRect(carX + ps * 15, carY + ps * 8, ps * 4, ps * 4);
     // Hubcaps
     ctx.fillStyle = '#999';
     ctx.fillRect(carX + ps * 4, carY + ps * 9, ps * 2, ps * 2);
-    ctx.fillRect(carX + ps * 18, carY + ps * 9, ps * 2, ps * 2);
+    ctx.fillRect(carX + ps * 16, carY + ps * 9, ps * 2, ps * 2);
 
     // Pixel figure sneaking with keys (right side, moving)
     const figX = cx + ps * 18 + Math.sin(t * 1.5) * ps * 3;
@@ -728,11 +751,190 @@ const Decorations = {
     const ps = this.ps;
     const t = time * 0.001;
 
-    // --- Quito mountain silhouette (background layer) ---
+    // --- Background mountain range ---
     ctx.fillStyle = '#0e0e20';
     ctx.beginPath();
     ctx.moveTo(0, h);
-    // Left mountain range (Pichincha-like)
+    ctx.lineTo(0, h - ps * 20);
+    ctx.lineTo(w * 0.08, h - ps * 28);
+    ctx.lineTo(w * 0.15, h - ps * 35);
+    ctx.lineTo(w * 0.22, h - ps * 28);
+    ctx.lineTo(w * 0.30, h - ps * 22);
+    ctx.lineTo(w * 0.38, h - ps * 16);
+    // Valley between the two mountains
+    ctx.lineTo(w * 0.45, h - ps * 12);
+    ctx.lineTo(w * 0.50, h - ps * 10);
+    ctx.lineTo(w * 0.55, h - ps * 12);
+    ctx.lineTo(w * 0.62, h - ps * 16);
+    ctx.lineTo(w * 0.70, h - ps * 22);
+    ctx.lineTo(w * 0.78, h - ps * 28);
+    ctx.lineTo(w * 0.85, h - ps * 35);
+    ctx.lineTo(w * 0.92, h - ps * 28);
+    ctx.lineTo(w, h - ps * 20);
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Snow caps
+    ctx.fillStyle = 'rgba(200, 210, 230, 0.15)';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.12, h - ps * 33);
+    ctx.lineTo(w * 0.15, h - ps * 35);
+    ctx.lineTo(w * 0.18, h - ps * 32);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(w * 0.82, h - ps * 33);
+    ctx.lineTo(w * 0.85, h - ps * 35);
+    ctx.lineTo(w * 0.88, h - ps * 32);
+    ctx.closePath();
+    ctx.fill();
+
+    // --- City lights in the valley ---
+    const cityY = h - ps * 10;
+    for (let i = 0; i < 20; i++) {
+      const cx = w * 0.38 + (i * w * 0.012);
+      const cy = cityY + Math.sin(i * 0.9) * ps * 1.5;
+      const flicker = Math.sin(t * 2 + i * 1.7) * 0.15;
+      const alpha = 0.12 + flicker;
+      if (i % 3 === 0) {
+        ctx.fillStyle = `rgba(255, 200, 100, ${alpha})`;
+      } else if (i % 3 === 1) {
+        ctx.fillStyle = `rgba(255, 240, 200, ${alpha * 0.7})`;
+      } else {
+        ctx.fillStyle = `rgba(200, 220, 255, ${alpha * 0.5})`;
+      }
+      ctx.fillRect(cx, cy, ps * 0.6, ps * 0.6);
+    }
+
+    // --- Foreground: two separate hills ---
+    // Left hill (him)
+    ctx.fillStyle = '#0a0a18';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    ctx.lineTo(0, h - ps * 8);
+    ctx.lineTo(w * 0.08, h - ps * 12);
+    ctx.lineTo(w * 0.15, h - ps * 16);
+    ctx.lineTo(w * 0.22, h - ps * 18);
+    ctx.lineTo(w * 0.28, h - ps * 16);
+    ctx.lineTo(w * 0.35, h - ps * 12);
+    ctx.lineTo(w * 0.42, h - ps * 6);
+    ctx.lineTo(w * 0.50, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Right hill (her)
+    ctx.beginPath();
+    ctx.moveTo(w * 0.50, h);
+    ctx.lineTo(w * 0.58, h - ps * 6);
+    ctx.lineTo(w * 0.65, h - ps * 12);
+    ctx.lineTo(w * 0.72, h - ps * 16);
+    ctx.lineTo(w * 0.78, h - ps * 18);
+    ctx.lineTo(w * 0.85, h - ps * 16);
+    ctx.lineTo(w * 0.92, h - ps * 12);
+    ctx.lineTo(w, h - ps * 8);
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Grass hints on both hills
+    ctx.fillStyle = 'rgba(30, 60, 30, 0.15)';
+    for (let i = 0; i < 12; i++) {
+      const gx = w * 0.10 + i * ps * 2.5;
+      const gy = h - ps * 13 - Math.sin(i * 0.6) * ps * 3;
+      ctx.fillRect(gx, gy, ps * 0.5, ps * 1.5);
+    }
+    for (let i = 0; i < 12; i++) {
+      const gx = w * 0.65 + i * ps * 2.5;
+      const gy = h - ps * 13 - Math.sin(i * 0.6) * ps * 3;
+      ctx.fillRect(gx, gy, ps * 0.5, ps * 1.5);
+    }
+
+    // --- Him (green) on left hill, looking right ---
+    const himX = w * 0.22 - ps * 2;
+    const himY = h - ps * 22;
+    // Body
+    ctx.fillStyle = '#2E8B57';
+    ctx.fillRect(himX, himY + ps * 2, ps * 4, ps * 4);
+    // Head
+    ctx.fillStyle = '#DEB887';
+    ctx.fillRect(himX + ps * 0.5, himY - ps, ps * 3, ps * 3);
+    // Legs (standing)
+    ctx.fillStyle = '#1B5E3A';
+    ctx.fillRect(himX + ps * 0.5, himY + ps * 6, ps * 1.5, ps * 2);
+    ctx.fillRect(himX + ps * 2, himY + ps * 6, ps * 1.5, ps * 2);
+
+    // --- Her (yellow, black hair) on right hill, looking left ---
+    const herX = w * 0.78 - ps * 2;
+    const herY = h - ps * 22;
+    // Body
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(herX, herY + ps * 2, ps * 4, ps * 4);
+    // Head
+    ctx.fillStyle = '#DEB887';
+    ctx.fillRect(herX + ps * 0.5, herY - ps, ps * 3, ps * 3);
+    // Dark black hair — long
+    ctx.fillStyle = '#0A0A0A';
+    ctx.fillRect(herX, herY - ps * 1.5, ps * 4, ps * 2);
+    ctx.fillRect(herX - ps * 0.5, herY - ps, ps * 1, ps * 4);
+    ctx.fillRect(herX + ps * 3, herY - ps, ps * 1.5, ps * 3);
+    // Legs (standing)
+    ctx.fillStyle = '#DAA520';
+    ctx.fillRect(herX + ps * 0.5, herY + ps * 6, ps * 1.5, ps * 2);
+    ctx.fillRect(herX + ps * 2, herY + ps * 6, ps * 1.5, ps * 2);
+
+    // --- Red thread of fate connecting them ---
+    const threadStartX = himX + ps * 4;
+    const threadStartY = himY + ps * 3.5;
+    const threadEndX = herX;
+    const threadEndY = herY + ps * 3.5;
+    const threadMidX = w * 0.5;
+    const threadDip = h - ps * 4;
+
+    // Gentle pulse on the thread
+    const threadAlpha = 0.35 + Math.sin(t * 0.8) * 0.1;
+    ctx.strokeStyle = `rgba(220, 50, 70, ${threadAlpha})`;
+    ctx.lineWidth = Math.max(1, ps * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(threadStartX, threadStartY);
+    // Catenary-like droop through the valley
+    ctx.quadraticCurveTo(threadMidX, threadDip, threadEndX, threadEndY);
+    ctx.stroke();
+
+    // Small glowing dots along the thread
+    for (let i = 0; i <= 8; i++) {
+      const frac = i / 8;
+      // Quadratic bezier interpolation
+      const bx = (1 - frac) * (1 - frac) * threadStartX + 2 * (1 - frac) * frac * threadMidX + frac * frac * threadEndX;
+      const by = (1 - frac) * (1 - frac) * threadStartY + 2 * (1 - frac) * frac * threadDip + frac * frac * threadEndY;
+      const dotAlpha = 0.2 + Math.sin(t * 1.5 + i * 0.8) * 0.15;
+      ctx.fillStyle = `rgba(255, 100, 120, ${dotAlpha})`;
+      ctx.fillRect(bx - ps * 0.3, by - ps * 0.3, ps * 0.6, ps * 0.6);
+    }
+
+    // Firefly-like particles
+    for (let i = 0; i < 6; i++) {
+      const side = i < 3 ? 0.15 : 0.75;
+      const fx = w * side + i * ps * 5 + Math.sin(t * 0.8 + i * 2) * ps * 2;
+      const fy = h - ps * 14 - Math.sin(i * 1.3) * ps * 5 + Math.cos(t * 0.6 + i) * ps;
+      const fa = 0.15 + Math.sin(t * 2 + i * 1.5) * 0.1;
+      ctx.fillStyle = `rgba(255, 240, 150, ${fa})`;
+      ctx.fillRect(fx, fy, ps * 0.6, ps * 0.6);
+    }
+  },
+
+  // --- Finale scene: couple together on hilltop (originally the title screen) ---
+  _renderTogether(time) {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    const ps = this.ps;
+    const t = time * 0.001;
+
+    // --- Quito mountain silhouette ---
+    ctx.fillStyle = '#0e0e20';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
     ctx.lineTo(0, h - ps * 25);
     ctx.lineTo(w * 0.05, h - ps * 30);
     ctx.lineTo(w * 0.10, h - ps * 38);
@@ -740,19 +942,15 @@ const Decorations = {
     ctx.lineTo(w * 0.20, h - ps * 35);
     ctx.lineTo(w * 0.25, h - ps * 30);
     ctx.lineTo(w * 0.30, h - ps * 25);
-    // Valley dip
     ctx.lineTo(w * 0.35, h - ps * 20);
     ctx.lineTo(w * 0.40, h - ps * 18);
-    // Central hill (where couple sits)
     ctx.lineTo(w * 0.43, h - ps * 20);
     ctx.lineTo(w * 0.47, h - ps * 24);
     ctx.lineTo(w * 0.50, h - ps * 26);
     ctx.lineTo(w * 0.53, h - ps * 24);
     ctx.lineTo(w * 0.57, h - ps * 20);
-    // Right side valley
     ctx.lineTo(w * 0.60, h - ps * 18);
     ctx.lineTo(w * 0.65, h - ps * 20);
-    // Right mountains (Cotopaxi-like)
     ctx.lineTo(w * 0.70, h - ps * 28);
     ctx.lineTo(w * 0.75, h - ps * 36);
     ctx.lineTo(w * 0.78, h - ps * 40);
@@ -765,16 +963,14 @@ const Decorations = {
     ctx.closePath();
     ctx.fill();
 
-    // Snow caps on taller peaks
+    // Snow caps
     ctx.fillStyle = 'rgba(200, 210, 230, 0.15)';
-    // Left peak
     ctx.beginPath();
     ctx.moveTo(w * 0.12, h - ps * 39);
     ctx.lineTo(w * 0.15, h - ps * 42);
     ctx.lineTo(w * 0.18, h - ps * 37);
     ctx.closePath();
     ctx.fill();
-    // Right peak
     ctx.beginPath();
     ctx.moveTo(w * 0.75, h - ps * 37);
     ctx.lineTo(w * 0.78, h - ps * 40);
@@ -782,16 +978,14 @@ const Decorations = {
     ctx.closePath();
     ctx.fill();
 
-    // --- City lights (tiny dots along the valley) ---
+    // City lights
     const cityY = h - ps * 16;
     for (let i = 0; i < 40; i++) {
       const cx = w * 0.08 + (i * w * 0.022);
-      // Skip the hill area where the couple sits
       if (cx > w * 0.42 && cx < w * 0.58) continue;
       const cy = cityY + Math.sin(i * 0.7) * ps * 3 - ps * 2;
       const flicker = Math.sin(t * 2 + i * 1.7) * 0.15;
       const alpha = 0.15 + flicker;
-      // Mix of warm and cool lights
       if (i % 3 === 0) {
         ctx.fillStyle = `rgba(255, 200, 100, ${alpha})`;
       } else if (i % 3 === 1) {
@@ -802,7 +996,7 @@ const Decorations = {
       ctx.fillRect(cx, cy, ps * 0.8, ps * 0.8);
     }
 
-    // --- Foreground hill (darker, where couple sits) ---
+    // Foreground hill
     ctx.fillStyle = '#0a0a18';
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -821,7 +1015,7 @@ const Decorations = {
     ctx.closePath();
     ctx.fill();
 
-    // Grass texture hints
+    // Grass hints
     ctx.fillStyle = 'rgba(30, 60, 30, 0.15)';
     for (let i = 0; i < 25; i++) {
       const gx = w * 0.35 + i * ps * 2.5;
@@ -829,54 +1023,45 @@ const Decorations = {
       ctx.fillRect(gx, gy, ps * 0.5, ps * 1.5);
     }
 
-    // --- Two figures sitting on the hilltop ---
+    // Two figures sitting together
     const coupleX = w * 0.5 - ps * 5;
     const coupleY = h - ps * 20;
 
-    // Him (green) — sitting
+    // Him (green)
     const hx = coupleX;
     const hy = coupleY;
-    // Body
     ctx.fillStyle = '#2E8B57';
     ctx.fillRect(hx, hy + ps * 2, ps * 4, ps * 4);
-    // Head
     ctx.fillStyle = '#DEB887';
     ctx.fillRect(hx + ps * 0.5, hy - ps, ps * 3, ps * 3);
-    // Legs (sitting, extended forward)
     ctx.fillStyle = '#1B5E3A';
     ctx.fillRect(hx - ps, hy + ps * 5, ps * 3, ps * 1.5);
     ctx.fillRect(hx + ps * 2, hy + ps * 5, ps * 3, ps * 1.5);
-    // Arm reaching toward her
     ctx.fillStyle = '#2E8B57';
     ctx.fillRect(hx + ps * 3, hy + ps * 3, ps * 2, ps);
 
-    // Her (yellow, black hair) — sitting
+    // Her (yellow, black hair)
     const sx = coupleX + ps * 6;
     const sy = coupleY;
-    // Body
     ctx.fillStyle = '#FFD700';
     ctx.fillRect(sx, sy + ps * 2, ps * 4, ps * 4);
-    // Head
     ctx.fillStyle = '#DEB887';
     ctx.fillRect(sx + ps * 0.5, sy - ps, ps * 3, ps * 3);
-    // Dark black hair — long
     ctx.fillStyle = '#0A0A0A';
     ctx.fillRect(sx, sy - ps * 1.5, ps * 4, ps * 2);
     ctx.fillRect(sx + ps * 3, sy - ps, ps * 1.5, ps * 4);
     ctx.fillRect(sx - ps * 0.5, sy - ps, ps * 1, ps * 3);
-    // Legs (sitting)
     ctx.fillStyle = '#DAA520';
     ctx.fillRect(sx - ps, sy + ps * 5, ps * 3, ps * 1.5);
     ctx.fillRect(sx + ps * 2, sy + ps * 5, ps * 3, ps * 1.5);
-    // Arm reaching toward him
     ctx.fillStyle = '#FFD700';
     ctx.fillRect(sx - ps, sy + ps * 3, ps * 2, ps);
 
-    // Holding hands (connecting their arms)
+    // Holding hands
     ctx.fillStyle = '#DEB887';
     ctx.fillRect(hx + ps * 4.5, hy + ps * 3, ps * 2, ps);
 
-    // Small heart floating above them
+    // Heart floating above
     const heartBob = Math.sin(t * 1.5) * ps * 1.5;
     const heartAlpha = 0.5 + Math.sin(t * 1.2) * 0.2;
     this._drawPixelHeart(
@@ -886,7 +1071,7 @@ const Decorations = {
       `rgba(255, 130, 170, ${heartAlpha})`
     );
 
-    // A few tiny firefly-like particles around the hill
+    // Fireflies
     for (let i = 0; i < 6; i++) {
       const fx = w * 0.38 + i * ps * 6 + Math.sin(t * 0.8 + i * 2) * ps * 2;
       const fy = h - ps * 14 - Math.sin(i * 1.3) * ps * 5 + Math.cos(t * 0.6 + i) * ps;

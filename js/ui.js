@@ -60,11 +60,13 @@ const UI = {
     document.getElementById('hudLevel').textContent = `NIVEL ${levelIndex + 1} / ${LEVELS.length}`;
     document.getElementById('hudCaught').textContent = '0';
     document.getElementById('hudGoal').textContent = level.goal;
+    document.getElementById('hudDate').textContent = this._formatDate(level.date) || '';
     this.screens.hud.classList.remove('hidden');
   },
 
   hideHud() {
     this.screens.hud.classList.add('hidden');
+    document.getElementById('hudDate').textContent = '';
   },
 
   updateHud(caught) {
@@ -111,5 +113,12 @@ const UI = {
     el.style.top = (screenY - 20) + 'px';
     document.body.appendChild(el);
     setTimeout(() => el.remove(), isSnitch ? 1000 : 500);
+  },
+
+  _formatDate(dateStr) {
+    if (!dateStr) return '';
+    const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return `${d} de ${months[m - 1]} de ${y}`;
   },
 };
