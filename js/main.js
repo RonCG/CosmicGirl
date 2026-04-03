@@ -8,6 +8,7 @@ const GisGame = {
   running: false,
   ambientAudio: null,
   audioStarted: false,
+  difficulty: 'easy',
 
   init() {
     this.canvas = document.getElementById('gameCanvas');
@@ -23,6 +24,20 @@ const GisGame = {
     window.addEventListener('resize', () => this.resize());
 
     // Bind events
+    // Difficulty selector
+    const easyBtn = document.getElementById('startEasy');
+    const hardBtn = document.getElementById('startHard');
+    easyBtn.addEventListener('click', () => {
+      this.difficulty = 'easy';
+      easyBtn.classList.add('active');
+      hardBtn.classList.remove('active');
+    });
+    hardBtn.addEventListener('click', () => {
+      this.difficulty = 'hard';
+      hardBtn.classList.add('active');
+      easyBtn.classList.remove('active');
+    });
+
     document.getElementById('startBtn').addEventListener('click', () => this.onStart());
     document.getElementById('playBtn').addEventListener('click', () => this.onPlay());
     document.getElementById('nextLevelBtn').addEventListener('click', () => this.onNextLevel());
@@ -122,6 +137,18 @@ const GisGame = {
     }, 60);
   },
 
+  getLevelWithDifficulty(level) {
+    if (this.difficulty === 'easy') return level;
+    // Hard mode multipliers
+    return Object.assign({}, level, {
+      hard: true,
+      shootingStarSpeed: level.shootingStarSpeed * 1.8,
+      shootingStarInterval: Math.round(level.shootingStarInterval * 0.7),
+      starMaxLife: Math.round(level.starMaxLife * 0.5),
+      timeLimit: Math.round(level.timeLimit * 0.7),
+    });
+  },
+
   onStart() {
     this.currentLevel = 0;
     UI.fadeOut('title').then(() => {
@@ -138,7 +165,7 @@ const GisGame = {
 
   onPlay() {
     UI.fadeOut('levelIntro').then(() => {
-      const level = LEVELS[this.currentLevel];
+      const level = this.getLevelWithDifficulty(LEVELS[this.currentLevel]);
       Game.startLevel(level);
       UI.showHud(level, this.currentLevel);
     });
@@ -146,7 +173,7 @@ const GisGame = {
 
   onRetry() {
     UI.fadeOut('levelFailed').then(() => {
-      const level = LEVELS[this.currentLevel];
+      const level = this.getLevelWithDifficulty(LEVELS[this.currentLevel]);
       Game.startLevel(level);
       UI.showHud(level, this.currentLevel);
     });

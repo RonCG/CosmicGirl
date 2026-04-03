@@ -95,6 +95,37 @@ canvas {
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
+/* Difficulty Select */
+.difficulty-select {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.difficulty-btn {
+  font-size: 0.45rem;
+  padding: 0.6rem 1.2rem;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.difficulty-btn.active {
+  border-color: rgba(255, 215, 0, 0.5);
+  color: rgba(255, 215, 0, 0.85);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.difficulty-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.difficulty-btn.active:hover {
+  border-color: rgba(255, 215, 0, 0.7);
+  color: rgba(255, 215, 0, 1);
+}
+
 /* Info Button */
 .info-btn {
   display: block;

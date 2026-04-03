@@ -14,7 +14,10 @@ const Decorations = {
   },
 
   resize() {
-    this.ps = Math.max(2, Math.floor(this.canvas.width / 320));
+    // Scale pixel art relative to screen, larger on mobile
+    const screenW = window.innerWidth;
+    const divisor = screenW < 768 ? 100 : 320;
+    this.ps = Math.max(4, Math.floor(this.canvas.width / divisor));
   },
 
   setLevel(index) {

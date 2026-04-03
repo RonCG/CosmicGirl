@@ -125,7 +125,8 @@ const Game = {
         const dx = s.x - cx;
         const dy = s.y - cy;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 45) {
+        const snitchHitRadius = this.level.hard ? 30 : 45;
+        if (dist < snitchHitRadius) {
           // Caught the snitch — instant win!
           this.playSnitchSound();
           for (const cb of this.catchCallbacks) cb(s.x, s.y, this.goal, true);
@@ -142,7 +143,7 @@ const Game = {
         const dx = star.x - cx;
         const dy = star.y - cy;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const hitRadius = Math.max(star.size * 4, 35);
+        const hitRadius = this.level.hard ? Math.max(star.size * 2.5, 22) : Math.max(star.size * 4, 35);
 
         if (dist < hitRadius) {
           // Caught!
@@ -282,15 +283,17 @@ const Game = {
       this.snitchSpawned = true;
       const w = this.canvas.width;
       const h = this.canvas.height;
+      const hard = this.level.hard;
       this.snitch = {
         x: w * 0.5,
         y: h * 0.3,
-        vx: (Math.random() - 0.5) * 8,
-        vy: (Math.random() - 0.5) * 8,
+        vx: (Math.random() - 0.5) * (hard ? 12 : 8),
+        vy: (Math.random() - 0.5) * (hard ? 12 : 8),
         born: time,
-        life: 4500, // visible for 4.5 seconds
-        nextDirChange: time + 300,
+        life: hard ? 3000 : 4500,
+        nextDirChange: time + (hard ? 150 : 300),
         wingPhase: 0,
+        hard,
       };
     }
 
@@ -301,16 +304,17 @@ const Game = {
 
     // Erratic direction changes
     if (time > s.nextDirChange) {
-      s.vx += (Math.random() - 0.5) * 12;
-      s.vy += (Math.random() - 0.5) * 12;
+      const jerk = s.hard ? 18 : 12;
+      s.vx += (Math.random() - 0.5) * jerk;
+      s.vy += (Math.random() - 0.5) * jerk;
       // Clamp speed
-      const maxSpeed = 10;
+      const maxSpeed = s.hard ? 14 : 10;
       const spd = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
       if (spd > maxSpeed) {
         s.vx = (s.vx / spd) * maxSpeed;
         s.vy = (s.vy / spd) * maxSpeed;
       }
-      s.nextDirChange = time + 150 + Math.random() * 250;
+      s.nextDirChange = time + (s.hard ? 80 + Math.random() * 120 : 150 + Math.random() * 250);
     }
 
     // Move
