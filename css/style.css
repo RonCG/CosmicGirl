@@ -290,6 +290,9 @@ canvas {
 .level-complete-content {
   text-align: center;
   animation: fadeInUp 1s ease;
+  max-width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .complete-title {
@@ -305,8 +308,18 @@ canvas {
   font-size: 0.55rem;
   color: rgba(255, 255, 255, 0.45);
   font-style: normal;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.8;
+}
+
+.complete-story {
+  font-size: 0.42rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-style: normal;
+  line-height: 2.4;
+  max-width: 500px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
 }
 
 /* Level Failed */
@@ -378,10 +391,13 @@ canvas {
 }
 
 .finale-step-subtext {
-  font-size: 0.5rem;
+  font-size: 0.45rem;
   color: rgba(255, 255, 255, 0.4);
-  line-height: 2;
+  line-height: 2.4;
   margin-bottom: 1.5rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .finale-question {

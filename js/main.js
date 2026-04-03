@@ -6,6 +6,8 @@ const GisGame = {
   currentLevel: 0,
   lastTime: 0,
   running: false,
+  ambientAudio: null,
+  audioStarted: false,
 
   init() {
     this.canvas = document.getElementById('gameCanvas');
@@ -65,6 +67,20 @@ const GisGame = {
       }, 400);
     });
 
+    // Setup ambient audio
+    this.ambientAudio = new Audio('audio/ambient.mp3');
+    this.ambientAudio.loop = true;
+    this.ambientAudio.volume = 0;
+
+    // Start audio on first user interaction (browsers require a gesture)
+    const startAudioOnce = () => {
+      this.startAudio();
+      document.removeEventListener('click', startAudioOnce);
+      document.removeEventListener('touchstart', startAudioOnce);
+    };
+    document.addEventListener('click', startAudioOnce);
+    document.addEventListener('touchstart', startAudioOnce);
+
     // Show title
     Decorations.showTitle();
     UI.showScreen('title');
@@ -84,6 +100,22 @@ const GisGame = {
       Sky.generate(LEVELS[this.currentLevel].date);
     }
     Decorations.resize();
+  },
+
+  startAudio() {
+    if (this.audioStarted) return;
+    this.audioStarted = true;
+    this.ambientAudio.play();
+    // Fade in over 3 seconds
+    let vol = 0;
+    const fadeIn = setInterval(() => {
+      vol += 0.02;
+      if (vol >= 0.4) {
+        vol = 0.4;
+        clearInterval(fadeIn);
+      }
+      this.ambientAudio.volume = vol;
+    }, 60);
   },
 
   onStart() {
@@ -233,35 +265,60 @@ const GisGame = {
             <button class="cosmic-btn" id="finTruffaut">Truffaut</button>
           </div>
         `;
-        div.querySelector('#finGodard').addEventListener('click', () => this._finaleStep(5));
-        div.querySelector('#finTruffaut').addEventListener('click', () => this._finaleStep(5));
+        div.querySelector('#finGodard').addEventListener('click', () => {
+          this._finaleChoice = 'godard';
+          this._finaleStep(5);
+        });
+        div.querySelector('#finTruffaut').addEventListener('click', () => {
+          this._finaleChoice = 'truffaut';
+          this._finaleStep(5);
+        });
         break;
       }
 
-      // Step 5: "That's not the question"
+      // Step 5: Reaction to her choice
       case 5: {
-        div.innerHTML = `
-          <p class="finale-step-text">No, espera...</p>
-          <p class="finale-step-text">Esa no era la pregunta.</p>
-          <button class="cosmic-btn" id="finNext5">¿Entonces?</button>
-        `;
+        if (this._finaleChoice === 'godard') {
+          div.innerHTML = `
+            <p class="finale-step-text">¡Totalmente de acuerdo!</p>
+            <p class="finale-step-subtext">Godard reinventó el lenguaje del cine. Los jump cuts de "Sin Aliento", la mezcla de documental y ficción, su cine como filosofía... Tarantino, Terrence Malick, todos le deben algo. Truffaut era un gran narrador, pero Godard empujó el cine más lejos que nadie.</p>
+            <button class="cosmic-btn" id="finNext5">...</button>
+          `;
+        } else {
+          div.innerHTML = `
+            <p class="finale-step-text">Mmm, no estoy de acuerdo...</p>
+            <p class="finale-step-subtext">Sí, "Los 400 Golpes" es una obra maestra y Truffaut ganó el Oscar con "La Noche Americana". Pero Godard reinventó el lenguaje del cine. Los jump cuts, el cine como ensayo filosófico... Tarantino, Malick, todos le deben algo. Truffaut contaba historias hermosas, pero Godard cambió las reglas del juego.</p>
+            <button class="cosmic-btn" id="finNext5">...</button>
+          `;
+        }
         div.querySelector('#finNext5').addEventListener('click', () => this._finaleStep(6));
         break;
       }
 
-      // Step 6: Transition to screenplay
+      // Step 6: "That's not the question"
       case 6: {
         div.innerHTML = `
-          <p class="finale-step-text">La verdadera pregunta<br>merece su propia escena.</p>
-          <p class="finale-step-text">¿Lista para actuar?</p>
-          <button class="cosmic-btn" id="finNext6">ACCIÓN</button>
+          <p class="finale-step-text">Bueno, en realidad...</p>
+          <p class="finale-step-text">Esa no era la pregunta.</p>
+          <button class="cosmic-btn" id="finNext6">¿Entonces?</button>
         `;
         div.querySelector('#finNext6').addEventListener('click', () => this._finaleStep(7));
         break;
       }
 
-      // Step 7: Screenplay scene
+      // Step 7: Transition to screenplay
       case 7: {
+        div.innerHTML = `
+          <p class="finale-step-text">La verdadera pregunta<br>merece su propia escena.</p>
+          <p class="finale-step-text">¿Lista para actuar?</p>
+          <button class="cosmic-btn" id="finNext7">ACCIÓN</button>
+        `;
+        div.querySelector('#finNext7').addEventListener('click', () => this._finaleStep(8));
+        break;
+      }
+
+      // Step 8: Screenplay scene
+      case 8: {
         const lines = [
           { type: 'heading', text: 'DORMITORIO DE RON - MEDIODÍA' },
           { type: 'action', text: 'Los dos están acostados en la cama. Se sientan derechos.' },
@@ -274,7 +331,16 @@ const GisGame = {
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(con falsa casualidad)' },
           { type: 'dialogue', text: 'Espera, quiero ponerte algo.' },
-          { type: 'action', text: 'Ron prende la nueva TV. Aparece un cielo estrellado que se mueve lentamente. Música suave.' },
+          { type: 'action', text: 'Ron prende la nueva TV. Aparece un video: "Descubre qué clase de empanada eres según tu signo zodiacal".' },
+          { type: 'character', text: 'RON' },
+          { type: 'parenthetical', text: '(se rie nerviosamente)' },
+          { type: 'dialogue', text: 'No, no, ese no.' },
+          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'parenthetical', text: '(riéndose)' },
+          { type: 'dialogue', text: 'Justo lo que necesitaba saber...' },
+          { type: 'character', text: 'RON' },
+          { type: 'dialogue', text: 'Son cosas importantes que hay que conocer ah, cultura genral... Pero no es lo que quería ponerte.' },
+          { type: 'action', text: 'Ron cambia el video. Aparece un cielo estrellado que se mueve lentamente. Música suave.' },
           { type: 'character', text: 'COSMIC GIRL' },
           { type: 'parenthetical', text: '(mirando la TV)' },
           { type: 'dialogue', text: 'Qué bonito... estrellas a mediodía en la TV.' },
@@ -283,21 +349,34 @@ const GisGame = {
           { type: 'character', text: 'COSMIC GIRL' },
           { type: 'dialogue', text: 'Eso no lo sabía.' },
           { type: 'character', text: 'RON' },
+          { type: 'dialogue', text: 'Es por la latitud. Estamos justo en la mitad, entonces podemos ver las del norte y las del sur.' },
+          { type: 'action', text: 'Pausa. Los dos miran la TV en silencio por un momento.' },
+          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'parenthetical', text: '(sonriendo)' },
+          { type: 'dialogue', text: 'O sea que tenemos un cielo cósmico.' },
+          { type: 'action', text: 'Los dos exhalan una risa por la nariz. De esas que no son risa pero casi.' },
+          { type: 'action', text: 'Otro silencio. Pero cómodo. De los buenos.' },
+          { type: 'character', text: 'RON' },
+          { type: 'parenthetical', text: '(de repente serio)' },
+          { type: 'dialogue', text: 'Pues si. Oye...' },
+          { type: 'character', text: 'COSMIC GIRL' },
+          { type: 'dialogue', text: '¿Qué?' },
+          { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(mirándola, ya no la TV)' },
           { type: 'dialogue', text: 'Hay algo más que quería decirte... Oh bueno, en realidad preguntarte' },
           { type: 'character', text: 'COSMIC GIRL' },
           { type: 'parenthetical', text: '(un poco nerviosa, lo mira)' },
           { type: 'dialogue', text: 'Creo que sé lo que me vas a preguntar...' },
           { type: 'character', text: 'RON' },
-          { type: 'parenthetical', text: '(un poco nervioso también, mirándola a los ojos)' },
-          { type: 'dialogue', text: 'Esa era la idea...' },
+          { type: 'parenthetical', text: '(un poco nervioso también, se sienta junto a ella y la mira a los ojos)' },
+          { type: 'dialogue', text: 'Creo que sé lo que crees saber...' },
           { type: 'action', text: 'Silencio. Las estrellas del video siguen brillando. Él toma aire.' },
           { type: 'character', text: 'COSMIC GIRL' },
           { type: 'parenthetical', text: '(sonriendo)' },
           { type: 'dialogue', text: 'Entonces pregunta.' },
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(mirándola a los ojos)' },
-          { type: 'dialogue', text: 'Dale continuar.' },
+          { type: 'dialogue', text: 'Haz click en continuar...' },
         ];
 
         const sp = document.createElement('div');
@@ -315,20 +394,20 @@ const GisGame = {
         // Continue button at the end
         const btnWrap = document.createElement('div');
         btnWrap.className = 'screenplay-continue';
-        btnWrap.innerHTML = `<button class="cosmic-btn" id="finNext7">CONTINUAR</button>`;
+        btnWrap.innerHTML = `<button class="cosmic-btn" id="finNext8">CONTINUAR</button>`;
         sp.appendChild(btnWrap);
 
         // Start scrolled to top
         sp.scrollTop = 0;
 
-        btnWrap.querySelector('#finNext7').addEventListener('click', () => {
-          this._finaleStep(8);
+        btnWrap.querySelector('#finNext8').addEventListener('click', () => {
+          this._finaleStep(9);
         });
         break;
       }
 
-      // Step 8: The real question — Yes / escaping No
-      case 8: {
+      // Step 9: The real question — Yes / escaping No
+      case 9: {
         div.innerHTML = `
           <p class="finale-question">Cosmic Girl,<br>¿quieres ser mi novia?</p>
           <div class="finale-buttons">
@@ -340,7 +419,7 @@ const GisGame = {
         const noBtn = div.querySelector('#finNoFinal');
         let noAttempts = 0;
 
-        yesBtn.addEventListener('click', () => this._finaleStep(9));
+        yesBtn.addEventListener('click', () => this._finaleStep(10));
 
         const escapeNo = () => {
           noAttempts++;
@@ -365,8 +444,8 @@ const GisGame = {
         break;
       }
 
-      // Step 9: Heart animation + fireworks
-      case 9: {
+      // Step 10: Heart animation + fireworks
+      case 10: {
         div.remove();
         msg.textContent = '';
         msg.classList.remove('visible');

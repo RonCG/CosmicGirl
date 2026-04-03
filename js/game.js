@@ -15,10 +15,65 @@ const Game = {
   startTime: 0,
   timeRemaining: 0,
 
+  audioCtx: null,
+
   init(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this._setupInput();
+  },
+
+  _getAudioCtx() {
+    if (!this.audioCtx) {
+      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+    return this.audioCtx;
+  },
+
+  playCatchSound() {
+    try {
+      const ctx = this._getAudioCtx();
+      const now = ctx.currentTime;
+
+      // Short sparkle chime — two quick tones
+      [880, 1320].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.35, now + i * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + i * 0.06);
+        osc.stop(now + i * 0.06 + 0.3);
+      });
+    } catch (e) { /* ignore audio errors */ }
+  },
+
+  playSnitchSound() {
+    try {
+      const ctx = this._getAudioCtx();
+      const now = ctx.currentTime;
+
+      // Magical ascending arpeggio
+      [660, 880, 1100, 1320, 1760].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const t = i * 0.08;
+        gain.gain.setValueAtTime(0.4, now + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + t);
+        osc.stop(now + t + 0.55);
+      });
+    } catch (e) { /* ignore audio errors */ }
   },
 
   startLevel(level) {
@@ -72,6 +127,7 @@ const Game = {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 45) {
           // Caught the snitch — instant win!
+          this.playSnitchSound();
           for (const cb of this.catchCallbacks) cb(s.x, s.y, this.goal, true);
           this.snitch = null;
           this.caught = this.goal;
@@ -90,6 +146,7 @@ const Game = {
 
         if (dist < hitRadius) {
           // Caught!
+          this.playCatchSound();
           this.shootingStars.splice(i, 1);
           this.caught++;
 

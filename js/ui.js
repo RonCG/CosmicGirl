@@ -86,6 +86,7 @@ const UI = {
   showLevelComplete(level) {
     document.getElementById('completeTitle').textContent = `"${level.title}"`;
     document.getElementById('completeMessage').textContent = '¡Nivel completado!';
+    document.getElementById('completeStory').textContent = level.completionText || '';
     this.showScreen('levelComplete');
   },
 
