@@ -261,21 +261,36 @@ const Game = {
     const edge = Math.random();
     let x, y, angle;
 
-    if (edge < 0.4) {
+    if (edge < 0.25) {
       // From top
       x = Math.random() * w;
       y = -20;
       angle = Math.PI * 0.25 + Math.random() * Math.PI * 0.5;
-    } else if (edge < 0.7) {
+    } else if (edge < 0.45) {
       // From left
       x = -20;
-      y = Math.random() * h * 0.5;
-      angle = -Math.PI * 0.15 + Math.random() * Math.PI * 0.4;
-    } else {
+      y = Math.random() * h * 0.75;
+      angle = -Math.PI * 0.2 + Math.random() * Math.PI * 0.5;
+    } else if (edge < 0.65) {
       // From right
       x = w + 20;
-      y = Math.random() * h * 0.5;
-      angle = Math.PI * 0.6 + Math.random() * Math.PI * 0.4;
+      y = Math.random() * h * 0.75;
+      angle = Math.PI * 0.55 + Math.random() * Math.PI * 0.5;
+    } else if (edge < 0.75) {
+      // From bottom (moving up)
+      x = w * 0.15 + Math.random() * w * 0.7;
+      y = h + 20;
+      angle = -Math.PI * 0.25 - Math.random() * Math.PI * 0.5;
+    } else if (edge < 0.875) {
+      // From bottom-left (moving up-right)
+      x = Math.random() * w * 0.4;
+      y = h * 0.7 + Math.random() * h * 0.3;
+      angle = -Math.PI * 0.15 + Math.random() * Math.PI * 0.3;
+    } else {
+      // From bottom-right (moving up-left)
+      x = w * 0.6 + Math.random() * w * 0.4;
+      y = h * 0.7 + Math.random() * h * 0.3;
+      angle = Math.PI * 0.65 + Math.random() * Math.PI * 0.3;
     }
 
     const speed = this.level.shootingStarSpeed * (0.8 + Math.random() * 0.4);

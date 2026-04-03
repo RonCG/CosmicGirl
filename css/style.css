@@ -301,6 +301,7 @@ canvas {
 }
 
 .hud-date {
+  display: none;
   position: fixed;
   bottom: 1rem;
   right: 1.2rem;
@@ -308,6 +309,12 @@ canvas {
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.25);
   letter-spacing: 0.05em;
+}
+
+@media (min-width: 768px) {
+  .hud-date {
+    display: block;
+  }
 }
 
 /* Level Complete */
