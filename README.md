@@ -1,36 +1,40 @@
 # Cosmic Girl
 
-Un juego web donde atrapas estrellas fugaces bajo el cielo real de Quito.
+A web game where you catch shooting stars under the real sky of Quito.
 
-## Sobre el juego
+## About
 
-Cosmic Girl es un juego de 10 niveles hecho con HTML5 Canvas. Cada nivel representa una fecha especial, y el cielo que ves es una simulación del cielo real sobre Quito, Ecuador en esa noche, con estrellas y constelaciones reales.
+Cosmic Girl is a 10-level game built with HTML5 Canvas. Each level represents a special date, and the sky you see is a simulation of the real sky over Quito, Ecuador on that night — with real stars and constellations.
 
-### Como jugar
+### How to play
 
-- Toca las estrellas fugaces doradas para atraparlas
-- Necesitas atrapar 7 en cada nivel antes de que se acabe el tiempo
-- Las estrellas se mueven mas rapido en cada nivel
-- De vez en cuando aparece una snitch dorada — si la atrapas, ganas el nivel de inmediato
-- En la parte inferior de la pantalla hay pixel art diferente en cada nivel
+- Tap the golden shooting stars to catch them
+- You need to catch 7 per level before time runs out
+- Stars move faster as you progress through levels
+- A golden snitch appears randomly — catch it to instantly win the level
+- Each level has unique pixel art at the bottom of the screen
 
-### Dificultad
+### Difficulty
 
-El juego tiene dos modos: **Facil** y **Dificil**. El modo dificil aumenta la velocidad, reduce el tiempo, y hace que las estrellas sean mas dificiles de atrapar.
+Two modes: **Easy** and **Hard**. Hard mode increases speed, reduces time, and makes stars harder to catch.
 
-## Tecnologia
+## Tech
 
-- HTML5 Canvas para todo el renderizado
-- Motor astronomico real (RA/Dec → Alt/Az) para simular el cielo de Quito
-- Web Audio API para efectos de sonido
-- Pixel art procedural para las decoraciones de cada nivel
-- Vanilla JS, sin frameworks ni dependencias
+- HTML5 Canvas for all rendering
+- Real astronomy engine (RA/Dec → Alt/Az) to simulate Quito's sky
+- Web Audio API for sound effects
+- Procedural pixel art for level decorations
+- Vanilla JS — no frameworks, no dependencies
 
-## Ejecutar localmente
+## Run locally
 
 ```bash
 python3 -m http.server 8000
-# Abrir http://localhost:8000
+# Open http://localhost:8000
 ```
 
-No requiere instalacion, build, ni dependencias. Solo abrir `index.html`.
+No install, no build, no dependencies. Just open `index.html`.
+
+---
+
+*All in-game text is in Spanish.*
