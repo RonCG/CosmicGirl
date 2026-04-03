@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Cosmic Girl</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="titleScreen" class="screen">
+    <div class="title-content">
+      <h1 class="game-title">Cosmic Girl</h1>
+      <p class="subtitle">Un viaje por las estrellas</p>
+      <button id="startBtn" class="cosmic-btn">Comenzar</button>
+    </div>
+  </div>
+
+  <div id="levelIntro" class="screen hidden">
+    <div class="level-intro-content">
+      <p class="level-date" id="levelDate"></p>
+      <h2 class="level-title" id="levelTitle"></h2>
+      <p class="level-description" id="levelDescription"></p>
+      <button id="playBtn" class="cosmic-btn">Jugar</button>
+    </div>
+  </div>
+
+  <div id="gameHud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-level" id="hudLevel"></div>
+      <div class="hud-score">
+        <span id="hudCaught">0</span> / <span id="hudGoal">0</span> ⭐
+      </div>
+    </div>
+  </div>
+
+  <div id="levelComplete" class="screen hidden">
+    <div class="level-complete-content">
+      <h2 class="complete-title" id="completeTitle">¡Nivel completado!</h2>
+      <p class="complete-message" id="completeMessage"></p>
+      <button id="nextLevelBtn" class="cosmic-btn">Siguiente</button>
+    </div>
+  </div>
+
+  <div id="finaleScreen" class="screen hidden">
+    <div class="finale-content">
+      <div class="finale-message" id="finaleMessage"></div>
+    </div>
+  </div>
+
+  <script src="js/star-catalog.js"></script>
+  <script src="js/astronomy.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/sky.js"></script>
+  <script src="js/decorations.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
