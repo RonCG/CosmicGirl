@@ -328,7 +328,7 @@ const GisGame = {
           { type: 'action', text: 'Ron cambia el video. Aparece un cielo estrellado que se mueve lentamente. Música suave.' },
           { type: 'character', text: 'GISELLE' },
           { type: 'parenthetical', text: '(mirando la TV)' },
-          { type: 'dialogue', text: 'Qué bonito... estrellas a mediodía en la TV.' },
+          { type: 'dialogue', text: 'Qué bonito... estrellas en la tarde en la TV.' },
           { type: 'character', text: 'RON' },
           { type: 'dialogue', text: '¿Sabías que desde Quito puedes ver casi todas las constelaciones del mundo?' },
           { type: 'character', text: 'GISELLE' },
