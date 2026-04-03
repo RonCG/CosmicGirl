@@ -191,8 +191,10 @@ canvas {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1.5rem;
 }
 
 .finale-message {
@@ -211,6 +213,135 @@ canvas {
 
 .finale-message.visible {
   opacity: 1;
+}
+
+/* Finale sequence steps */
+.finale-step {
+  animation: fadeInUp 0.8s ease;
+}
+
+.finale-step-text {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 2.2;
+  margin-bottom: 1.5rem;
+  max-width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.finale-step-subtext {
+  font-size: 0.5rem;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 2;
+  margin-bottom: 1.5rem;
+}
+
+.finale-buttons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.no-btn {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  border-radius: 0;
+  transition: transform 0.1s ease;
+}
+
+.no-btn.escaping {
+  position: fixed;
+  z-index: 100;
+  transition: none;
+}
+
+/* Screenplay */
+.screenplay {
+  background: rgba(30, 28, 22, 0.85);
+  border: 1px solid rgba(180, 170, 140, 0.2);
+  border-radius: 2px;
+  padding: 2.5rem 2rem;
+  max-width: 620px;
+  width: 92%;
+  max-height: 75vh;
+  overflow-y: auto;
+  text-align: left;
+  font-family: 'Courier New', Courier, monospace;
+  color: rgba(220, 210, 185, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.screenplay .scene-heading {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: rgba(220, 210, 185, 0.7);
+  margin-bottom: 1em;
+  font-size: 0.9rem;
+}
+
+.screenplay .action {
+  margin-bottom: 0.8em;
+  color: rgba(220, 210, 185, 0.6);
+  font-style: italic;
+}
+
+.screenplay .character {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0;
+  color: rgba(220, 210, 185, 0.9);
+  font-size: 0.95rem;
+}
+
+.screenplay .parenthetical {
+  text-align: center;
+  color: rgba(220, 210, 185, 0.5);
+  font-style: italic;
+  margin-bottom: 0.2em;
+  font-size: 0.85rem;
+}
+
+.screenplay .dialogue {
+  text-align: center;
+  margin-bottom: 0.5em;
+  padding: 0 15%;
+  color: rgba(220, 210, 185, 0.85);
+}
+
+.screenplay .sp-line {
+  opacity: 0;
+  animation: spReveal 0.4s ease forwards;
+}
+
+@keyframes spReveal {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.screenplay-continue {
+  text-align: right;
+  margin-top: 1.5em;
+}
+
+.screenplay-continue .cosmic-btn {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  border-color: rgba(220, 210, 185, 0.3);
+  color: rgba(220, 210, 185, 0.7);
 }
 
 /* Animations */
