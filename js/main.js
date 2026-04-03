@@ -394,7 +394,7 @@ const GisGame = {
       // Step 9: The real question — Yes / escaping No
       case 9: {
         div.innerHTML = `
-          <p class="finale-question">GISELLE,<br>¿quieres ser mi novia?</p>
+          <p class="finale-question">Cosmic Girl,<br>¿quieres ser mi novia?</p>
           <div class="finale-buttons">
             <button class="cosmic-btn finale-yes-btn" id="finYesFinal">¡Sí!</button>
             <button class="no-btn" id="finNoFinal">No</button>
