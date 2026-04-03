@@ -10,6 +10,7 @@ const UI = {
       levelIntro: document.getElementById('levelIntro'),
       hud: document.getElementById('gameHud'),
       levelComplete: document.getElementById('levelComplete'),
+      levelFailed: document.getElementById('levelFailed'),
       finale: document.getElementById('finaleScreen'),
     };
   },
@@ -50,7 +51,7 @@ const UI = {
 
   showLevelIntro(level, levelIndex) {
     document.getElementById('levelDate').textContent = formatDateSpanish(level.date);
-    document.getElementById('levelTitle').textContent = level.title;
+    document.getElementById('levelTitle').textContent = `"${level.title}"`;
     document.getElementById('levelDescription').textContent = level.description || '';
     this.showScreen('levelIntro');
   },
@@ -70,9 +71,21 @@ const UI = {
     document.getElementById('hudCaught').textContent = caught;
   },
 
+  updateTimer(seconds) {
+    const el = document.getElementById('hudTimer');
+    const s = Math.ceil(seconds);
+    el.textContent = s;
+    el.classList.toggle('timer-low', s <= 5);
+  },
+
+  showLevelFailed(level) {
+    document.getElementById('failedTitle').textContent = `"${level.title}"`;
+    this.showScreen('levelFailed');
+  },
+
   showLevelComplete(level) {
-    document.getElementById('completeTitle').textContent = '¡Nivel completado!';
-    document.getElementById('completeMessage').textContent = level.title;
+    document.getElementById('completeTitle').textContent = `"${level.title}"`;
+    document.getElementById('completeMessage').textContent = '¡Nivel completado!';
     this.showScreen('levelComplete');
   },
 
@@ -90,12 +103,12 @@ const UI = {
   },
 
   // Catch effect — brief sparkle at catch position
-  spawnCatchEffect(screenX, screenY) {
+  spawnCatchEffect(screenX, screenY, isSnitch) {
     const el = document.createElement('div');
-    el.className = 'catch-effect';
+    el.className = isSnitch ? 'catch-effect snitch-catch' : 'catch-effect';
     el.style.left = (screenX - 20) + 'px';
     el.style.top = (screenY - 20) + 'px';
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 500);
+    setTimeout(() => el.remove(), isSnitch ? 1000 : 500);
   },
 };

@@ -24,14 +24,26 @@ const GisGame = {
     document.getElementById('startBtn').addEventListener('click', () => this.onStart());
     document.getElementById('playBtn').addEventListener('click', () => this.onPlay());
     document.getElementById('nextLevelBtn').addEventListener('click', () => this.onNextLevel());
+    document.getElementById('retryBtn').addEventListener('click', () => this.onRetry());
 
-    Game.onCatch((x, y, caught) => {
-      UI.updateHud(caught);
+    const infoModal = document.getElementById('infoModal');
+    document.getElementById('infoBtn').addEventListener('click', () => {
+      infoModal.classList.remove('hidden');
+    });
+    document.getElementById('infoCloseBtn').addEventListener('click', () => {
+      infoModal.classList.add('hidden');
+    });
+    infoModal.addEventListener('click', (e) => {
+      if (e.target === infoModal) infoModal.classList.add('hidden');
+    });
+
+    Game.onCatch((x, y, caught, isSnitch) => {
+      UI.updateHud(isSnitch ? Game.goal : caught);
       // Convert canvas coords to screen coords for catch effect
       const rect = this.canvas.getBoundingClientRect();
       const screenX = (x / this.canvas.width) * rect.width + rect.left;
       const screenY = (y / this.canvas.height) * rect.height + rect.top;
-      UI.spawnCatchEffect(screenX, screenY);
+      UI.spawnCatchEffect(screenX, screenY, isSnitch);
     });
 
     Game.onComplete(() => {
@@ -44,6 +56,13 @@ const GisGame = {
           UI.showLevelComplete(level);
         }
       }, 600);
+    });
+
+    Game.onFail(() => {
+      setTimeout(() => {
+        UI.hideHud();
+        UI.showLevelFailed(LEVELS[this.currentLevel]);
+      }, 400);
     });
 
     // Show title
@@ -83,6 +102,14 @@ const GisGame = {
 
   onPlay() {
     UI.fadeOut('levelIntro').then(() => {
+      const level = LEVELS[this.currentLevel];
+      Game.startLevel(level);
+      UI.showHud(level, this.currentLevel);
+    });
+  },
+
+  onRetry() {
+    UI.fadeOut('levelFailed').then(() => {
       const level = LEVELS[this.currentLevel];
       Game.startLevel(level);
       UI.showHud(level, this.currentLevel);
@@ -236,7 +263,7 @@ const GisGame = {
       // Step 7: Screenplay scene
       case 7: {
         const lines = [
-          { type: 'heading', text: 'INT. DORMITORIO DE RON - MEDIODÍA' },
+          { type: 'heading', text: 'DORMITORIO DE RON - MEDIODÍA' },
           { type: 'action', text: 'Los dos están acostados en la cama. Se sientan derechos.' },
           { type: 'action', text: 'La luz del sol entra por la ventana. Ron se levanta.' },
           { type: 'character', text: 'RON' },
@@ -257,12 +284,12 @@ const GisGame = {
           { type: 'dialogue', text: 'Eso no lo sabía.' },
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(mirándola, ya no la TV)' },
-          { type: 'dialogue', text: 'Hay algo más que quería decirte...' },
+          { type: 'dialogue', text: 'Hay algo más que quería decirte... Oh bueno, en realidad preguntarte' },
           { type: 'character', text: 'COSMIC GIRL' },
           { type: 'parenthetical', text: '(un poco nerviosa, lo mira)' },
           { type: 'dialogue', text: 'Creo que sé lo que me vas a preguntar...' },
           { type: 'character', text: 'RON' },
-          { type: 'parenthetical', text: '(mirándola a los ojos)' },
+          { type: 'parenthetical', text: '(un poco nervioso también, mirándola a los ojos)' },
           { type: 'dialogue', text: 'Esa era la idea...' },
           { type: 'action', text: 'Silencio. Las estrellas del video siguen brillando. Él toma aire.' },
           { type: 'character', text: 'COSMIC GIRL' },
@@ -300,23 +327,59 @@ const GisGame = {
         break;
       }
 
-      // Step 8: The real proposal — heart animation
+      // Step 8: The real question — Yes / escaping No
       case 8: {
+        div.innerHTML = `
+          <p class="finale-question">Cosmic Girl,<br>¿quieres ser mi novia?</p>
+          <div class="finale-buttons">
+            <button class="cosmic-btn finale-yes-btn" id="finYesFinal">¡Sí!</button>
+            <button class="no-btn" id="finNoFinal">No</button>
+          </div>
+        `;
+        const yesBtn = div.querySelector('#finYesFinal');
+        const noBtn = div.querySelector('#finNoFinal');
+        let noAttempts = 0;
+
+        yesBtn.addEventListener('click', () => this._finaleStep(9));
+
+        const escapeNo = () => {
+          noAttempts++;
+          if (noAttempts >= 3) {
+            noBtn.textContent = '¡Selecciona Sí!';
+            noBtn.style.pointerEvents = 'none';
+            noBtn.style.opacity = '0.2';
+            return;
+          }
+          noBtn.classList.add('escaping');
+          const maxX = window.innerWidth - 120;
+          const maxY = window.innerHeight - 60;
+          noBtn.style.left = (Math.random() * maxX) + 'px';
+          noBtn.style.top = (Math.random() * maxY) + 'px';
+        };
+
+        noBtn.addEventListener('mouseenter', escapeNo);
+        noBtn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          escapeNo();
+        });
+        break;
+      }
+
+      // Step 9: Heart animation + fireworks
+      case 9: {
         div.remove();
+        msg.textContent = '';
+        msg.classList.remove('visible');
 
         this.finaleStartTime = performance.now();
         this.finaleStars = this._createFinaleStars();
+        this.finaleFireworks = [];
         this.finalePhase = 'gathering';
 
         setTimeout(() => {
-          this.finalePhase = 'spelling';
-        }, 2000);
-
-        setTimeout(() => {
           this.finalePhase = 'reveal';
-          msg.textContent = 'Cosmic Girl, ¿quieres ser mi novia?';
-          msg.classList.add('visible');
-        }, 5000);
+          this._startFireworks();
+        }, 3500);
         break;
       }
     }
@@ -361,19 +424,67 @@ const GisGame = {
     return points;
   },
 
+  _startFireworks() {
+    this._fireworkInterval = setInterval(() => {
+      if (this.finalePhase !== 'reveal') {
+        clearInterval(this._fireworkInterval);
+        return;
+      }
+      this._spawnFirework();
+    }, 800);
+    // Spawn a few immediately
+    this._spawnFirework();
+    setTimeout(() => this._spawnFirework(), 300);
+  },
+
+  _spawnFirework() {
+    if (!this.finaleFireworks) return;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    // Launch from bottom area
+    const x = w * 0.15 + Math.random() * w * 0.7;
+    const burstY = h * 0.5 + Math.random() * h * 0.3;
+
+    const colors = [
+      { r: 255, g: 215, b: 0 },   // gold
+      { r: 255, g: 100, b: 100 },  // red
+      { r: 255, g: 180, b: 50 },   // orange
+      { r: 200, g: 150, b: 255 },  // purple
+      { r: 100, g: 220, b: 255 },  // cyan
+    ];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const particleCount = 20 + Math.floor(Math.random() * 15);
+    const particles = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+      const speed = 1.5 + Math.random() * 2.5;
+      particles.push({
+        x, y: burstY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        alpha: 1,
+        size: 2 + Math.random() * 2,
+      });
+    }
+
+    this.finaleFireworks.push({
+      color,
+      particles,
+      born: performance.now(),
+      life: 1500 + Math.random() * 800,
+    });
+  },
+
   _renderFinaleStars(time) {
     if (!this.finaleStars) return;
     const ctx = this.ctx;
     const elapsed = (time - this.finaleStartTime) / 1000;
 
     for (const star of this.finaleStars) {
-      let progress = 0;
-
-      if (this.finalePhase === 'gathering' || this.finalePhase === 'spelling' || this.finalePhase === 'reveal') {
-        progress = Math.min(1, elapsed / 4);
-        // Ease out cubic
-        progress = 1 - Math.pow(1 - progress, 3);
-      }
+      let progress = Math.min(1, elapsed / 3.5);
+      progress = 1 - Math.pow(1 - progress, 3);
 
       star.x = star.startX + (star.endX - star.startX) * progress;
       star.y = star.startY + (star.endY - star.startY) * progress;
@@ -382,21 +493,70 @@ const GisGame = {
       const twinkle = Math.sin(time * 0.003 + star.endX) * 0.2;
       const alpha = star.brightness + twinkle;
 
-      // Glow
+      // Golden glow
       const glowSize = star.size * 4;
       const glow = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowSize);
-      glow.addColorStop(0, `rgba(255, 230, 200, ${alpha * 0.4})`);
-      glow.addColorStop(1, `rgba(255, 230, 200, 0)`);
+      glow.addColorStop(0, `rgba(255, 215, 80, ${alpha * 0.4})`);
+      glow.addColorStop(1, `rgba(255, 215, 80, 0)`);
       ctx.fillStyle = glow;
       ctx.beginPath();
       ctx.arc(star.x, star.y, glowSize, 0, Math.PI * 2);
       ctx.fill();
 
       // Core
-      ctx.fillStyle = `rgba(255, 240, 220, ${alpha})`;
+      ctx.fillStyle = `rgba(255, 240, 200, ${alpha})`;
       ctx.beginPath();
       ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // Render fireworks
+    this._renderFireworks(time);
+  },
+
+  _renderFireworks(time) {
+    if (!this.finaleFireworks) return;
+    const ctx = this.ctx;
+
+    for (let i = this.finaleFireworks.length - 1; i >= 0; i--) {
+      const fw = this.finaleFireworks[i];
+      const age = time - fw.born;
+      const { r, g, b } = fw.color;
+
+      if (age > fw.life) {
+        this.finaleFireworks.splice(i, 1);
+        continue;
+      }
+
+      const fadeProgress = age / fw.life;
+
+      for (const p of fw.particles) {
+        // Gravity + drag
+        p.vy += 0.03;
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha = Math.max(0, 1 - fadeProgress);
+
+        if (p.alpha <= 0) continue;
+
+        // Glow
+        const gs = p.size * 3;
+        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gs);
+        glow.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${p.alpha * 0.3})`);
+        glow.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, gs, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Core
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   },
 
@@ -421,6 +581,7 @@ const GisGame = {
     if (Game.isPlaying) {
       Game.update(time, safeDt);
       Game.render();
+      UI.updateTimer(Game.timeRemaining);
     }
 
     // Render finale stars

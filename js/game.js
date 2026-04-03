@@ -11,6 +11,9 @@ const Game = {
   ctx: null,
   catchCallbacks: [],
   completeCallbacks: [],
+  failCallbacks: [],
+  startTime: 0,
+  timeRemaining: 0,
 
   init(canvas) {
     this.canvas = canvas;
@@ -25,11 +28,18 @@ const Game = {
     this.goal = level.goal;
     this.isPlaying = true;
     this.lastSpawn = 0;
+    this.startTime = 0;
+    this.timeRemaining = level.timeLimit;
+    this.snitch = null;
+    this.snitchSpawned = false;
+    // Random time between 30%-70% of the level to spawn snitch
+    this.snitchSpawnAt = level.timeLimit * (0.3 + Math.random() * 0.4);
   },
 
   stop() {
     this.isPlaying = false;
     this.shootingStars = [];
+    this.snitch = null;
   },
 
   onCatch(cb) {
@@ -38,6 +48,10 @@ const Game = {
 
   onComplete(cb) {
     this.completeCallbacks.push(cb);
+  },
+
+  onFail(cb) {
+    this.failCallbacks.push(cb);
   },
 
   _setupInput() {
@@ -49,6 +63,23 @@ const Game = {
       const scaleY = this.canvas.height / rect.height;
       const cx = (x - rect.left) * scaleX;
       const cy = (y - rect.top) * scaleY;
+
+      // Check snitch first
+      if (this.snitch) {
+        const s = this.snitch;
+        const dx = s.x - cx;
+        const dy = s.y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 45) {
+          // Caught the snitch — instant win!
+          for (const cb of this.catchCallbacks) cb(s.x, s.y, this.goal, true);
+          this.snitch = null;
+          this.caught = this.goal;
+          this.isPlaying = false;
+          for (const cb of this.completeCallbacks) cb();
+          return;
+        }
+      }
 
       for (let i = this.shootingStars.length - 1; i >= 0; i--) {
         const star = this.shootingStars[i];
@@ -121,14 +152,13 @@ const Game = {
     }
 
     const speed = this.level.shootingStarSpeed * (0.8 + Math.random() * 0.4);
-    const size = 3 + Math.random() * 3;
+    const size = 4 + Math.random() * 3;
 
-    // Warm white to soft gold color palette
+    // Golden yellow palette — her favorite color
     const colors = [
-      { r: 255, g: 255, b: 240 },
-      { r: 255, g: 245, b: 200 },
-      { r: 230, g: 220, b: 255 },
-      { r: 200, g: 220, b: 255 },
+      { r: 255, g: 215, b: 0 },   // gold
+      { r: 255, g: 200, b: 30 },   // warm gold
+      { r: 255, g: 230, b: 50 },   // bright yellow
     ];
     const color = colors[Math.floor(Math.random() * colors.length)];
 
@@ -140,14 +170,30 @@ const Game = {
       color,
       trail: [],
       life: 0,
-      maxLife: 300 + Math.random() * 200,
+      maxLife: (this.level.starMaxLife || 300) + Math.random() * 100,
+      sparkleOffset: Math.random() * Math.PI * 2,
     });
   },
 
   update(time, dt) {
     if (!this.isPlaying) return;
 
+    // Init start time on first update
+    if (this.startTime === 0) this.startTime = time;
+
+    // Update timer
+    const elapsed = (time - this.startTime) / 1000;
+    this.timeRemaining = Math.max(0, this.level.timeLimit - elapsed);
+
+    // Check time's up
+    if (this.timeRemaining <= 0 && this.caught < this.goal) {
+      this.isPlaying = false;
+      for (const cb of this.failCallbacks) cb();
+      return;
+    }
+
     this._spawnShootingStar(time);
+    this._updateSnitch(time, dt);
 
     const w = this.canvas.width;
     const h = this.canvas.height;
@@ -171,39 +217,214 @@ const Game = {
     }
   },
 
+  _updateSnitch(time, dt) {
+    const elapsed = (time - this.startTime) / 1000;
+
+    // Spawn snitch once at the scheduled time
+    if (!this.snitchSpawned && elapsed >= this.snitchSpawnAt) {
+      this.snitchSpawned = true;
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+      this.snitch = {
+        x: w * 0.5,
+        y: h * 0.3,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        born: time,
+        life: 4500, // visible for 4.5 seconds
+        nextDirChange: time + 300,
+        wingPhase: 0,
+      };
+    }
+
+    if (!this.snitch) return;
+    const s = this.snitch;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    // Erratic direction changes
+    if (time > s.nextDirChange) {
+      s.vx += (Math.random() - 0.5) * 12;
+      s.vy += (Math.random() - 0.5) * 12;
+      // Clamp speed
+      const maxSpeed = 10;
+      const spd = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+      if (spd > maxSpeed) {
+        s.vx = (s.vx / spd) * maxSpeed;
+        s.vy = (s.vy / spd) * maxSpeed;
+      }
+      s.nextDirChange = time + 150 + Math.random() * 250;
+    }
+
+    // Move
+    s.x += s.vx * dt * 60;
+    s.y += s.vy * dt * 60;
+
+    // Bounce off edges (keep it on screen)
+    const margin = 40;
+    if (s.x < margin) { s.x = margin; s.vx = Math.abs(s.vx); }
+    if (s.x > w - margin) { s.x = w - margin; s.vx = -Math.abs(s.vx); }
+    if (s.y < margin) { s.y = margin; s.vy = Math.abs(s.vy); }
+    if (s.y > h - margin) { s.y = h - margin; s.vy = -Math.abs(s.vy); }
+
+    // Wing flutter
+    s.wingPhase = time * 0.02;
+
+    // Remove after lifespan
+    if (time - s.born > s.life) {
+      this.snitch = null;
+    }
+  },
+
   render() {
     const ctx = this.ctx;
+    const time = performance.now();
 
     for (const star of this.shootingStars) {
       const { r, g, b } = star.color;
 
-      // Trail
+      // Trail — warm gold fading to red
       for (let i = 0; i < star.trail.length; i++) {
         const t = star.trail[i];
-        const alpha = (i / star.trail.length) * 0.5;
-        const trailSize = star.size * (i / star.trail.length) * 0.6;
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        const progress = i / star.trail.length;
+        const alpha = progress * 0.6;
+        const trailSize = star.size * progress * 0.7;
+        // Shift from red at tail to gold at head
+        const tr = 255;
+        const tg = Math.round(80 + progress * (g - 80));
+        const tb = Math.round(0 + progress * b);
+        ctx.fillStyle = `rgba(${tr}, ${tg}, ${tb}, ${alpha})`;
         ctx.beginPath();
         ctx.arc(t.x, t.y, trailSize, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Glow
+      // Outer red/warm glow
+      const outerGlow = star.size * 8;
+      const og = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, outerGlow);
+      og.addColorStop(0, `rgba(255, 150, 30, 0.25)`);
+      og.addColorStop(0.4, `rgba(255, 80, 20, 0.08)`);
+      og.addColorStop(1, `rgba(255, 50, 10, 0)`);
+      ctx.fillStyle = og;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, outerGlow, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner gold glow
       const glowSize = star.size * 4;
       const glow = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowSize);
-      glow.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.6)`);
-      glow.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.15)`);
+      glow.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.7)`);
+      glow.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.2)`);
       glow.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
       ctx.fillStyle = glow;
       ctx.beginPath();
       ctx.arc(star.x, star.y, glowSize, 0, Math.PI * 2);
       ctx.fill();
 
-      // Core
+      // 4-point sparkle
+      const sparkle = Math.sin(time * 0.005 + star.sparkleOffset) * 0.3 + 0.7;
+      const spikeLen = star.size * 3 * sparkle;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.8)`;
+      ctx.lineWidth = 1.5;
+      for (let a = 0; a < 4; a++) {
+        const angle = (a * Math.PI) / 2 + time * 0.001;
+        ctx.beginPath();
+        ctx.moveTo(star.x, star.y);
+        ctx.lineTo(star.x + Math.cos(angle) * spikeLen, star.y + Math.sin(angle) * spikeLen);
+        ctx.stroke();
+      }
+
+      // Bright core
+      ctx.fillStyle = `rgba(255, 255, 220, 1)`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Gold ring
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 1)`;
       ctx.beginPath();
       ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Render snitch
+    this._renderSnitch(time);
+  },
+
+  _renderSnitch(time) {
+    if (!this.snitch) return;
+    const ctx = this.ctx;
+    const s = this.snitch;
+    const age = time - s.born;
+
+    // Fade in/out
+    let alpha = 1;
+    if (age < 400) alpha = age / 400;
+    if (age > s.life - 600) alpha = Math.max(0, (s.life - age) / 600);
+
+    const sz = 8;
+
+    // Outer golden aura
+    const aura = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, sz * 6);
+    aura.addColorStop(0, `rgba(255, 215, 0, ${0.3 * alpha})`);
+    aura.addColorStop(0.5, `rgba(255, 180, 0, ${0.1 * alpha})`);
+    aura.addColorStop(1, `rgba(255, 150, 0, 0)`);
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, sz * 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wings — two curved shapes that flutter
+    const wingFlap = Math.sin(s.wingPhase) * 0.6;
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.globalAlpha = alpha * 0.85;
+
+    // Left wing
+    ctx.save();
+    ctx.rotate(-0.3 + wingFlap);
+    ctx.translate(-sz * 1.2, 0);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, sz * 1.8, sz * 0.6, -0.4, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, 0.5)`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.3)`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Right wing
+    ctx.save();
+    ctx.rotate(0.3 - wingFlap);
+    ctx.translate(sz * 1.2, 0);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, sz * 1.8, sz * 0.6, 0.4, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, 0.5)`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.3)`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.globalAlpha = alpha;
+
+    // Golden sphere body
+    const bodyGrad = ctx.createRadialGradient(-sz * 0.3, -sz * 0.3, 0, 0, 0, sz);
+    bodyGrad.addColorStop(0, '#FFF8DC');
+    bodyGrad.addColorStop(0.4, '#FFD700');
+    bodyGrad.addColorStop(0.8, '#DAA520');
+    bodyGrad.addColorStop(1, '#B8860B');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, sz, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = `rgba(255, 255, 255, 0.6)`;
+    ctx.beginPath();
+    ctx.arc(-sz * 0.3, -sz * 0.3, sz * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   },
 };

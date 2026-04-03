@@ -17,6 +17,39 @@
       <h1 class="game-title">Cosmic Girl</h1>
       <p class="subtitle">Un viaje por las estrellas</p>
       <button id="startBtn" class="cosmic-btn">Comenzar</button>
+      <button id="infoBtn" class="info-btn">?</button>
+    </div>
+  </div>
+
+  <div id="infoModal" class="info-modal hidden">
+    <div class="info-modal-content">
+      <button id="infoCloseBtn" class="info-close-btn">&times;</button>
+      <h2 class="info-title">Cómo jugar</h2>
+
+      <div class="info-section">
+        <h3 class="info-heading">El juego</h3>
+        <p class="info-text">Cada nivel representa una fecha especial en nuestra historia. El cielo que ves es el cielo real sobre Quito en esa noche, con las estrellas y constelaciones reales.</p>
+      </div>
+
+      <div class="info-section">
+        <h3 class="info-heading">Estrellas fugaces</h3>
+        <p class="info-text">Toca las estrellas fugaces doradas para atraparlas. Necesitas atrapar 7 en cada nivel antes de que se acabe el tiempo. Se mueven más rápido en cada nivel.</p>
+      </div>
+
+      <div class="info-section">
+        <h3 class="info-heading">La snitch dorada</h3>
+        <p class="info-text">De vez en cuando aparece una snitch dorada con alas. Es muy rápida y difícil de atrapar, pero si la atrapas ganas el nivel de inmediato.</p>
+      </div>
+
+      <div class="info-section">
+        <h3 class="info-heading">Cosas que ver</h3>
+        <p class="info-text">En la parte inferior de la pantalla hay pixel art diferente en cada nivel. Presta atención, cada uno tiene una historia especial.</p>
+      </div>
+
+      <div class="info-section">
+        <h3 class="info-heading">Tips</h3>
+        <p class="info-text">Las estrellas fugaces pueden aparecer desde cualquier borde de la pantalla. No las confundas con los cometas y meteoritos del fondo, esos no se pueden atrapar.</p>
+      </div>
     </div>
   </div>
 
@@ -32,6 +65,7 @@
   <div id="gameHud" class="hidden">
     <div class="hud-top">
       <div class="hud-level" id="hudLevel"></div>
+      <div class="hud-timer" id="hudTimer">30</div>
       <div class="hud-score">
         <span id="hudCaught">0</span> / <span id="hudGoal">0</span> ⭐
       </div>
@@ -43,6 +77,14 @@
       <h2 class="complete-title" id="completeTitle">¡Nivel completado!</h2>
       <p class="complete-message" id="completeMessage"></p>
       <button id="nextLevelBtn" class="cosmic-btn">Siguiente</button>
+    </div>
+  </div>
+
+  <div id="levelFailed" class="screen hidden">
+    <div class="level-failed-content">
+      <h2 class="failed-title" id="failedTitle"></h2>
+      <p class="failed-message">¡Se acabó el tiempo!</p>
+      <button id="retryBtn" class="cosmic-btn">Reintentar</button>
     </div>
   </div>
 
