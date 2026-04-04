@@ -210,6 +210,8 @@ const Game = {
       if (!this.isPlaying) return;
       this._moonHolding = true;
       this._moonHoldStart = performance.now();
+      // Resume AudioContext now (user gesture) so it's ready when the timer fires
+      this._getAudioCtx();
       this._moonHoldTimer = setTimeout(() => {
         if (!this._moonHolding || !this.isPlaying) return;
         // Easter egg triggered — instant win

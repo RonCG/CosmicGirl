@@ -9,6 +9,7 @@ const GisGame = {
   ambientAudio: null,
   audioStarted: false,
   difficulty: 'easy',
+  _transitioning: false,
 
   init() {
     this.canvas = document.getElementById('gameCanvas');
@@ -84,13 +85,17 @@ const GisGame = {
     this.ambientAudio.play().then(() => {
       this.startAudio();
     }).catch(() => {
-      const startAudioOnce = () => {
+      const tryStart = () => {
+        if (this.audioStarted) {
+          document.removeEventListener('click', tryStart);
+          document.removeEventListener('touchend', tryStart);
+          return;
+        }
         this.startAudio();
-        document.removeEventListener('click', startAudioOnce);
-        document.removeEventListener('touchstart', startAudioOnce);
       };
-      document.addEventListener('click', startAudioOnce);
-      document.addEventListener('touchstart', startAudioOnce);
+      // Use touchend (not touchstart) — iOS only unlocks audio on touchend/click
+      document.addEventListener('click', tryStart);
+      document.addEventListener('touchend', tryStart);
     });
 
     // Show title
@@ -117,17 +122,21 @@ const GisGame = {
   startAudio() {
     if (this.audioStarted) return;
     this.audioStarted = true;
-    this.ambientAudio.play();
-    // Fade in over 3 seconds
-    let vol = 0;
-    const fadeIn = setInterval(() => {
-      vol += 0.02;
-      if (vol >= 0.4) {
-        vol = 0.4;
-        clearInterval(fadeIn);
-      }
-      this.ambientAudio.volume = vol;
-    }, 60);
+    this.ambientAudio.play().then(() => {
+      // Fade in over 3 seconds
+      let vol = 0;
+      const fadeIn = setInterval(() => {
+        vol += 0.02;
+        if (vol >= 0.4) {
+          vol = 0.4;
+          clearInterval(fadeIn);
+        }
+        this.ambientAudio.volume = vol;
+      }, 60);
+    }).catch(() => {
+      // Play blocked — reset flag so next user gesture retries
+      this.audioStarted = false;
+    });
   },
 
   getLevelWithDifficulty(level) {
@@ -143,8 +152,11 @@ const GisGame = {
   },
 
   onStart() {
+    if (this._transitioning) return;
+    this._transitioning = true;
     this.currentLevel = 0;
     UI.fadeOut('title').then(() => {
+      this._transitioning = false;
       this.showLevelIntro();
     });
   },
@@ -157,7 +169,10 @@ const GisGame = {
   },
 
   onPlay() {
+    if (this._transitioning) return;
+    this._transitioning = true;
     UI.fadeOut('levelIntro').then(() => {
+      this._transitioning = false;
       const level = this.getLevelWithDifficulty(LEVELS[this.currentLevel]);
       Game.startLevel(level);
       UI.showHud(level, this.currentLevel);
@@ -165,7 +180,10 @@ const GisGame = {
   },
 
   onRetry() {
+    if (this._transitioning) return;
+    this._transitioning = true;
     UI.fadeOut('levelFailed').then(() => {
+      this._transitioning = false;
       const level = this.getLevelWithDifficulty(LEVELS[this.currentLevel]);
       Game.startLevel(level);
       UI.showHud(level, this.currentLevel);
@@ -173,12 +191,15 @@ const GisGame = {
   },
 
   onNextLevel() {
+    if (this._transitioning) return;
+    this._transitioning = true;
     this.currentLevel++;
     if (this.currentLevel >= LEVELS.length) {
       this.showFinale();
       return;
     }
     UI.fadeOut('levelComplete').then(() => {
+      this._transitioning = false;
       this.showLevelIntro();
     });
   },
@@ -310,7 +331,7 @@ const GisGame = {
           { type: 'action', text: 'La luz del sol entra por la ventana. Ron se levanta.' },
           { type: 'character', text: 'RON' },
           { type: 'parenthetical', text: '(cierra las cortinas)' },
-          { type: 'action', text: 'La habitación se oscurece un poco, pero la luz del mediodía aún se cuela por los bordes. Todavía se nota que es de día.' },
+          { type: 'action', text: 'La habitación se oscurece un poco, pero la luz de la tarde aún se cuela por los bordes.' },
           { type: 'character', text: 'GISELLE' },
           { type: 'dialogue', text: '¿Qué haces?' },
           { type: 'character', text: 'RON' },
